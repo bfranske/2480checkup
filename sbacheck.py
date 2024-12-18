@@ -245,6 +245,7 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
             
             # Get the list of files in the specified directory
             dir_files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
+            print(dir_files)
             
             # Count how many files from the directory are in the tar archive
             count = sum(1 for f in dir_files if f in tar_files)
