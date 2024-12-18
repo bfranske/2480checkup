@@ -191,11 +191,14 @@ def verifyRecursiveOwnership(directory, username):
             if os.stat(root).st_uid != user_uid:
                 return False
             
-            # Check the ownership of each file
+            # Check the ownership of each file, skip links
             for name in files:
                 file_path = os.path.join(root, name)
-                if os.stat(file_path).st_uid != user_uid:
-                    return False
+                if os.path.islink(file_path):
+                    pass
+                else:
+                    if os.stat(file_path).st_uid != user_uid:
+                        return False
             
             # Check the ownership of each subdirectory
             for name in dirs:
@@ -238,6 +241,7 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
         with tarfile.open(tar_path, 'r:gz') as tar:
             # Get the list of files in the tar archive
             tar_files = tar.getnames()
+            print(tar_files)
             
             # Get the list of files in the specified directory
             dir_files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
