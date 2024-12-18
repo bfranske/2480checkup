@@ -180,7 +180,7 @@ def verifyCopiedLines(sourceFile,targetFile,numLines):
 def verifyRecursiveOwnership(directory, username):
     if not os.path.exists(directory):
         return None
-        
+
     try:
         # Get the UID of the specified username
         user_uid = pwd.getpwnam(username).pw_uid
@@ -212,20 +212,23 @@ def verifyRecursiveOwnership(directory, username):
         return False
 
 def checkPermissions(directory, permissionList):
-    #check how many files in directory do not match permissionList
+    #check how many files in directory do not match permissionList, skip links
     #permissionList like ['-rw-------', '-rwx------']
     if not os.path.exists(directory):
-        return None
+        return False
 
     non_compliant_files = 0
     
     for root, dirs, files in os.walk(directory):
         for file in files:
             file_path = os.path.join(root, file)
-            mode = os.stat(file_path).st_mode
-            permissions = stat.filemode(mode)
-            if permissions not in permissionList:
-                non_compliant_files += 1
+            if os.path.islink(file_path):
+                pass
+            else:
+                mode = os.stat(file_path).st_mode
+                permissions = stat.filemode(mode)
+                if permissions not in permissionList:
+                    non_compliant_files += 1
     
     return non_compliant_files
 
