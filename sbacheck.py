@@ -43,7 +43,7 @@ def systemDomainName():
         return str(e)
 
 def testPassword(username, password):
-    p = pam.authenticate()
+    p = pam.pam()
     return p.authenticate(username, password, service='login', resetcreds=True)
 
 ipDetails = getInterfaceDetails()
