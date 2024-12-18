@@ -14,13 +14,12 @@ def getInterfaceDetails():
         if iface.get('ifname'):
             intName = iface.get('ifname')
             ipData[intName] = {}
+            ipData[intName].update(ipv4 = None)
+            ipData[intName].update(ipv4prefix = None)
             for addr_info in iface.get('addr_info', []):
                 if addr_info.get('family') == 'inet':
                     ipData[intName].update(ipv4 = addr_info.get('local'))
                     ipData[intName].update(ipv4prefix = str(addr_info.get('prefixlen')))
-                else:
-                    ipData[intName].update(ipv4 = None)
-                    ipData[intName].update(ipv4prefix = None)
             ipData[intName].update(state = iface.get('operstate'))
     return(ipData)
 
