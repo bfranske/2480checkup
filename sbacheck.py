@@ -6,6 +6,9 @@ import re
 from datetime import datetime
 import socket
 import pam
+import grp
+import pwd
+import os
 
 def getInterfaceDetails():
     ipData = {}
@@ -56,6 +59,70 @@ def checkSudo(username):
     else:
         return True
 
+def doesGroupExist(groupname):
+    try:
+        grp.getgrnam(groupname)
+        return True
+    except KeyError:
+        return False
+
+def isUserInGroup(username, groupname):
+    try:
+        group_info = grp.getgrnam(groupname)
+        user_info = pwd.getpwnam(username)
+        return username in group_info.gr_mem or user_info.pw_gid == group_info.gr_gid
+    except KeyError:
+        return False
+
+def checkBASHHistory(user, command):
+    # Path to the user's bash history file
+    history_file = f"/home/{user}/.bash_history"
+    
+    # Check if the history file exists
+    if not os.path.exists(history_file):
+        return None
+    
+    # Read the history file and check for the command
+    with open(history_file, 'r') as file:
+        history = file.readlines()
+    
+    # Create a regex pattern to match the command with optional characters before or after
+    pattern = re.compile(rf".*{re.escape(command)}.*")
+    
+    # Check if the command is in the history
+    for line in history:
+        if pattern.match(line):
+            return True
+    return False
+
+def getFileOwnership(file_path):
+    # Get the file's status
+    file_stat = os.stat(file_path)
+    
+    # Get the user ID and group ID
+    uid = file_stat.st_uid
+    gid = file_stat.st_gid
+    
+    # Get the username and group name
+    user_name = pwd.getpwuid(uid).pw_name
+    group_name = grp.getgrgid(gid).gr_name
+    
+    return user_name, group_name
+
+def isPackageInstalled(packageName):
+    try:
+        # Run the dpkg -s command
+        result = subprocess.run(['dpkg', '-s', packageName], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        
+        # Check the return code
+        if result.returncode == 0:
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
 ipDetails = getInterfaceDetails()
 systemSetupDate = getRootFSCreationDate()
 hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8')
@@ -65,6 +132,14 @@ examPasswordTest = testPassword('examuser','GoodLuck')
 examSudoTest = checkSudo('examuser')
 linuxPasswordTest = testPassword('linuxgeek','linuxi$fun!')
 linuxSudoTest = checkSudo('linuxgeek')
+studentGroupTest = doesGroupExist('students')
+if studentGroupTest:
+    studentGroupMembers = grp.getgrnam('students').gr_mem
+else:
+    studentGroupMembers = None
+lastTenLinesCommand = checkBASHHistory('examuser', 'tail -10 /var/log/dpkg.log > /home/linuxgeek/recent-packages') or checkBASHHistory('examuser', 'tail -n 10 /var/log/dpkg.log > /home/linuxgeek/recent-packages')
+recentPackagesUser,recentPackagesGroup = getFileOwnership('/home/linuxgeek/recent-packages')
+sectionThreePackages = isPackageInstalled('python3') and isPackageInstalled('curl') and isPackageInstalled('locate') and isPackageInstalled('python3-requests')
 
 print("------------------------------")
 print("System Report:")
@@ -84,6 +159,13 @@ print(f"The examuser user account has the right password: {examPasswordTest}")
 print(f"The examuser user account has sudo: {examSudoTest}")
 print(f"The linuxgeek user account has the right password: {linuxPasswordTest}")
 print(f"The linuxgeek user account has sudo: {linuxSudoTest}")
+print(f"The student group exists: {studentGroupTest}")
+print(f"student group members: {studentGroupMembers}")
+print(f"Did examuser create a file of recent packages with 10 lines: {lastTenLinesCommand}")
+print(f"recent-packages file owner is: {recentPackagesUser}")
+print(f"recent-packages file group owner is: {recentPackagesGroup}")
+print(f"Section 3 required packages are installed: {sectionThreePackages}")
+
 
 #test=json.loads(subprocess.run(["ip", "-j", "addr", "show"], capture_output=True).stdout)
 #print(test)
