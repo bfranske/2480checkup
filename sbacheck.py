@@ -5,10 +5,11 @@ import json
 import re
 from datetime import datetime
 import socket
+import pam
 
 def getInterfaceDetails():
     ipData = {}
-    allIntData = json.loads(subprocess.run(["ip", "-j", "addr", "show"], text=True, capture_output=True).stdout))
+    allIntData = json.loads(subprocess.run(["ip", "-j", "addr", "show"], text=True, capture_output=True).stdout)
     for iface in allIntData:
         if iface.get('ifname'):
             intName = iface.get('ifname')
@@ -41,22 +42,15 @@ def systemDomainName():
     except Exception as e:
         return str(e)
 
-def testRootPassword(password):
-    #Currently always returns true because the whole script runs as root
-    result = subprocess.run(['su', '-c', 'exit'], input=password, text=True, capture_output=True)
-    print(result)
-    if result.returncode == 0:
-        print("Password is correct.")
-        return True
-    else:
-        print("Password is incorrect.")
-        return False
+def testPassword(username, password):
+    p = pam.authenticate()
+    return p.authenticate(username, password, service='login', resetcreds=True)
 
 ipDetails = getInterfaceDetails()
 systemSetupDate = getRootFSCreationDate()
 hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8')
 domainname = systemDomainName()
-testRootPassword('r00tp@ssa')
+testPassword('root','r00tp@ssa')
 
 #test=json.loads(subprocess.run(["ip", "-j", "addr", "show"], capture_output=True).stdout)
 #print(test)
