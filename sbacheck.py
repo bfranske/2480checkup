@@ -9,6 +9,8 @@ import pam
 import grp
 import pwd
 import os
+import stat
+import tarfile
 
 def getInterfaceDetails():
     ipData = {}
@@ -123,6 +125,121 @@ def isPackageInstalled(packageName):
         print(f"An error occurred: {e}")
         return False
 
+def directoryExists(path):
+    return os.path.isdir(path)
+
+def fileContainsRegex(filePath, pattern):
+    regex = re.compile(pattern)
+    
+    try:
+        with open(filePath, 'r') as file:
+            for line in file:
+                if regex.search(line):
+                    return True
+        return False
+    except FileNotFoundError:
+        print(f"File not found: {filePath}")
+        return False
+
+def checkCommonFiles(sourceDir, targetDir, numFiles):
+    #check if at least numFiles from the sourceDir exist in the targetDir
+    sourceFiles = set(os.listdir(sourceDir))
+    targetFiles = set(os.listdir(targetDir))
+    
+    commonFiles = sourceFiles.intersection(targetFiles)
+    
+    return len(commonFiles) >= numFiles
+
+def verifyCopiedLines(sourceFile,targetFile,numLines):
+    try:
+        with open(sourceFile, 'r') as source_file:
+            source_lines = source_file.readlines()
+        
+        with open(targetFile, 'r') as target_file:
+            target_lines = target_file.readlines()
+        
+        # Check if at least 10 lines from /etc/passwd are in the backup file
+        copied_lines_count = sum(1 for line in source_lines if line in target_lines)
+        
+        if copied_lines_count >= numLines:
+            return True
+        else:
+            return False
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return False
+
+def verifyRecursiveOwnership(directory, username):
+    try:
+        # Get the UID of the specified username
+        user_uid = pwd.getpwnam(username).pw_uid
+        
+        # Walk through the directory
+        for root, dirs, files in os.walk(directory):
+            # Check the ownership of the directory
+            if os.stat(root).st_uid != user_uid:
+                return False
+            
+            # Check the ownership of each file
+            for name in files:
+                file_path = os.path.join(root, name)
+                if os.stat(file_path).st_uid != user_uid:
+                    return False
+            
+            # Check the ownership of each subdirectory
+            for name in dirs:
+                dir_path = os.path.join(root, name)
+                if os.stat(dir_path).st_uid != user_uid:
+                    return False
+        
+        return True
+    except KeyError:
+        print(f"User '{username}' does not exist.")
+        return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
+def checkPermissions(directory, permissionList):
+    #check how many files in directory do not match permissionList
+    #permissionList like ['-rw-------', '-rwx------']
+    non_compliant_files = 0
+    
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            mode = os.stat(file_path).st_mode
+            permissions = stat.filemode(mode)
+            if permissions not in permissionList:
+                non_compliant_files += 1
+    
+    return non_compliant_files
+
+def checkFilesInTar(tar_path, dir_path, min_files=10):
+    # Open the tar file
+    with tarfile.open(tar_path, 'r:gz') as tar:
+        # Get the list of files in the tar archive
+        tar_files = tar.getnames()
+        
+        # Get the list of files in the specified directory
+        dir_files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
+        
+        # Count how many files from the directory are in the tar archive
+        count = sum(1 for f in dir_files if f in tar_files)
+        
+        # Check if the count is at least min_files
+        return count >= min_files
+
+def checkSoftLink(source, target):
+    # Check if the source is a symbolic link
+    if os.path.islink(source):
+        # Get the path the symbolic link points to
+        link_target = os.readlink(source)
+        # Check if it matches the target path
+        if link_target == target:
+            return True
+    return False
+
 ipDetails = getInterfaceDetails()
 systemSetupDate = getRootFSCreationDate()
 hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8')
@@ -140,6 +257,14 @@ else:
 lastTenLinesCommand = checkBASHHistory('examuser', 'tail -10 /var/log/dpkg.log > /home/linuxgeek/recent-packages') or checkBASHHistory('examuser', 'tail -n 10 /var/log/dpkg.log > /home/linuxgeek/recent-packages')
 recentPackagesUser,recentPackagesGroup = getFileOwnership('/home/linuxgeek/recent-packages')
 sectionThreePackages = isPackageInstalled('python3') and isPackageInstalled('curl') and isPackageInstalled('locate') and isPackageInstalled('python3-requests')
+itcfinalDirectory = directoryExists('/home/examuser/itcfinal')
+dmesgInKernmsg = fileContainsRegex('/home/examuser/itcfinal/kernmsg.txt', r'^\[\s*\d+\.\d+\]\s+ Command line: BOOT_IMAGE=.* root=.*')
+checkEtcBackup = checkCommonFiles('/etc/', '/home/examuser/backups/orig-config/', 10)
+checkPasswdBackup = verifyCopiedLines('/etc/passwd','/home/examuser/backups/system-users', 10)
+checkBackupOwnership = verifyRecursiveOwnership('/home/examuser/backups', 'linuxgeek')
+checkBackupPermissions = checkPermissions('/home/examuser/backups', ['-rw-------', '-rwx------'])
+checkLogTar = checkFilesInTar('/home/examuser/itcfinal/systemlogs.tar.gz','/var/log',10)
+backupSoftlink = checkSoftLink('/home/linuxgeek/itcfinal-backups','/home/examuser/backups')
 
 print("------------------------------")
 print("System Report:")
@@ -165,6 +290,18 @@ print(f"Did examuser create a file of recent packages with 10 lines: {lastTenLin
 print(f"recent-packages file owner is: {recentPackagesUser}")
 print(f"recent-packages file group owner is: {recentPackagesGroup}")
 print(f"Section 3 required packages are installed: {sectionThreePackages}")
+print("------------------------------")
+print("Part 4:")
+print("------------------------------")
+print(f"itcfinal directory exists: {itcfinalDirectory}")
+print(f"kernmsg.txt contains dmesg output: {dmesgInKernmsg}")
+print(f"At least 10 files from /etc/ are in backups/orig-config/: {checkEtcBackup}")
+print(f"Password file was backed up and renamed: {checkPasswdBackup}")
+print(f"Recursive ownership of /home/examuser/backups is linuxgeek: {checkBackupOwnership}")
+print(f"Number of non-compliant permissions in backup directory: {checkBackupPermissions}")
+print(f"At least 10 files from /var/log in systemlogs.tar.gz: {checkLogTar}")
+print(f"itcfinal-backups soft link in place: {backupSoftlink}")
+
 
 
 #test=json.loads(subprocess.run(["ip", "-j", "addr", "show"], capture_output=True).stdout)
