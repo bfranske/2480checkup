@@ -143,8 +143,12 @@ def fileContainsRegex(filePath, pattern):
 
 def checkCommonFiles(sourceDir, targetDir, numFiles):
     #check if at least numFiles from the sourceDir exist in the targetDir
-    sourceFiles = set(os.listdir(sourceDir))
-    targetFiles = set(os.listdir(targetDir))
+    try:
+        sourceFiles = set(os.listdir(sourceDir))
+        targetFiles = set(os.listdir(targetDir))
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return False
     
     commonFiles = sourceFiles.intersection(targetFiles)
     
