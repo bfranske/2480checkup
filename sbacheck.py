@@ -98,18 +98,22 @@ def checkBASHHistory(user, command):
     return False
 
 def getFileOwnership(file_path):
-    # Get the file's status
-    file_stat = os.stat(file_path)
-    
-    # Get the user ID and group ID
-    uid = file_stat.st_uid
-    gid = file_stat.st_gid
-    
-    # Get the username and group name
-    user_name = pwd.getpwuid(uid).pw_name
-    group_name = grp.getgrgid(gid).gr_name
-    
-    return user_name, group_name
+    try:
+        # Get the file's status
+        file_stat = os.stat(file_path)
+        
+        # Get the user ID and group ID
+        uid = file_stat.st_uid
+        gid = file_stat.st_gid
+        
+        # Get the username and group name
+        user_name = pwd.getpwuid(uid).pw_name
+        group_name = grp.getgrgid(gid).gr_name
+        
+        return user_name, group_name
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return False,False
 
 def isPackageInstalled(packageName):
     try:
@@ -239,14 +243,18 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
         return False
 
 def checkSoftLink(source, target):
-    # Check if the source is a symbolic link
-    if os.path.islink(source):
-        # Get the path the symbolic link points to
-        link_target = os.readlink(source)
-        # Check if it matches the target path
-        if link_target == target:
-            return True
-    return False
+    try:
+        # Check if the source is a symbolic link
+        if os.path.islink(source):
+            # Get the path the symbolic link points to
+            link_target = os.readlink(source)
+            # Check if it matches the target path
+            if link_target == target:
+                return True
+        return False
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return False
 
 ipDetails = getInterfaceDetails()
 systemSetupDate = getRootFSCreationDate()
