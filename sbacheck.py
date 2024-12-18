@@ -221,18 +221,22 @@ def checkPermissions(directory, permissionList):
 
 def checkFilesInTar(tar_path, dir_path, min_files=10):
     # Open the tar file
-    with tarfile.open(tar_path, 'r:gz') as tar:
-        # Get the list of files in the tar archive
-        tar_files = tar.getnames()
-        
-        # Get the list of files in the specified directory
-        dir_files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
-        
-        # Count how many files from the directory are in the tar archive
-        count = sum(1 for f in dir_files if f in tar_files)
-        
-        # Check if the count is at least min_files
-        return count >= min_files
+    try:
+        with tarfile.open(tar_path, 'r:gz') as tar:
+            # Get the list of files in the tar archive
+            tar_files = tar.getnames()
+            
+            # Get the list of files in the specified directory
+            dir_files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
+            
+            # Count how many files from the directory are in the tar archive
+            count = sum(1 for f in dir_files if f in tar_files)
+            
+            # Check if the count is at least min_files
+            return count >= min_files
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return False
 
 def checkSoftLink(source, target):
     # Check if the source is a symbolic link
