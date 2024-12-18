@@ -50,7 +50,7 @@ ipDetails = getInterfaceDetails()
 systemSetupDate = getRootFSCreationDate()
 hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8')
 domainname = systemDomainName()
-testPassword('root','r00tp@ssa')
+print(testPassword('root','r00tp@ssa'))
 
 #test=json.loads(subprocess.run(["ip", "-j", "addr", "show"], capture_output=True).stdout)
 #print(test)
