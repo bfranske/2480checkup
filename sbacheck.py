@@ -248,7 +248,7 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
             for root, _, files in os.walk(dir_path):
                 for f in files:
                     relative_path = os.path.relpath(os.path.join(root, f), dir_path)
-                    full_path = os.path.join(root, f), dir_path
+                    full_path = os.path.join(root, f)
                     dir_files.append(os.path.normpath(relative_path))
                     dir_files.append(os.path.normpath(full_path))
             print(dir_files)
@@ -268,7 +268,6 @@ def checkSoftLink(source, target):
         if os.path.islink(source):
             # Get the path the symbolic link points to
             link_target = os.readlink(source)
-            print(link_target)
             # Check if it matches the target path
             if link_target == target:
                 return True
