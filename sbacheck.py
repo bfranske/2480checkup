@@ -244,7 +244,13 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
             print(tar_files)
             
             # Get the list of files in the specified directory
-            dir_files = [os.path.normpath(os.path.relpath(os.path.join(dir_path, f), dir_path)) for f in os.listdir(dir_path)]
+            dir_files = []
+            for root, _, files in os.walk(dir_path):
+                for f in files:
+                    relative_path = os.path.relpath(os.path.join(root, f), dir_path)
+                    full_path = os.path.join(root, f), dir_path
+                    dir_files.append(os.path.normpath(relative_path))
+                    dir_files.append(os.path.normpath(full_path))
             print(dir_files)
             
             # Count how many files from the directory are in the tar archive
@@ -295,7 +301,7 @@ checkPasswdBackup = verifyCopiedLines('/etc/passwd','/home/examuser/backups/syst
 checkBackupOwnership = verifyRecursiveOwnership('/home/examuser/backups', 'linuxgeek')
 checkBackupPermissions = checkPermissions('/home/examuser/backups', ['-rw-------', '-rwx------'])
 checkLogTar = checkFilesInTar('/home/examuser/itcfinal/systemlogs.tar.gz','/var/log',10)
-backupSoftlink = checkSoftLink('/home/linuxgeek/itcfinal-backups','/home/examuser/backups')
+backupSoftlink = checkSoftLink('/home/linuxgeek/itcfinal-backups','/home/examuser/backups/')
 
 print("------------------------------")
 print("System Report:")
