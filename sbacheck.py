@@ -462,7 +462,11 @@ def doExamCheck():
     report +=f"The webserver running at {basicURL} is: {webserver}\n"
     phpVersion=checkPHPVersion('/var/www/html/testphpver.php',basicURL+'/testphpver.php')
     report +=f"The php version running is: {phpVersion}\n"
-
+    mariaDBPackage = isPackageInstalled('mariadb-server')
+    report +=f"MariaDB Server is installed: {mariaDBPackage}\n"
+    phpmysqlPackage = isPackageInstalled('php-mysql')
+    report +=f"PHP-MySQL is installed: {phpmysqlPackage}\n"
+    
     return report
 
 print(doExamCheck())
