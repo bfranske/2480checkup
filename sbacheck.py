@@ -314,6 +314,34 @@ def getSystemdNetworkConfig(interface):
     
     return network_config
 
+def checkSystemdServiceStatus(serviceName):
+    try:
+        # Check if the service is enabled
+        enabled_result = subprocess.run(['systemctl', 'is-enabled', serviceName], capture_output=True, text=True)
+        # Check if the service is running
+        running_result = subprocess.run(['systemctl', 'is-active', serviceName], capture_output=True, text=True)
+        
+        # Determine enabled status
+        if enabled_result.returncode == 0:
+            enabled_status = True
+        elif enabled_result.returncode == 1:
+            enabled_status = False
+        else:
+            #Could not determine the enabled status of the service
+            enabled_status = None
+        # Determine the running status
+        if running_result.returncode == 0:
+            running_status = True
+        elif running_result.returncode == 3:
+            running_status = False
+        else:
+            running_status = None
+
+        return {'service': serviceName, 'enabledStatus': enabled_status, 'runningStatus': running_status}
+
+    except Exception as e:
+        return f"An error occurred: {e}"
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -382,7 +410,13 @@ def doExamCheck():
     ens192StaticIP = getSystemdNetworkConfig('ens192')
     report +=f"Static ens192 IPv4 Address is: {ens192StaticIP['ipv4address']}/{ens192StaticIP['ipv4mask']}\n"
     report +=f"Active ens192 IPv4 Address is: {ipDetails['ens192']['ipv4']}/{ipDetails['ens192']['ipv4prefix']}\n"
-    
+    networkdStatus=checkSystemdServiceStatus('systemd-networkd')
+    report +=f"The newer service '{networkdStatus['service']}' is enabled: {networkdStatus['enabledStatus']}\n"
+    report +=f"The newer service '{networkdStatus['service']}' is running: {networkdStatus['runningStatus']}\n"
+    networkingStatus=checkSystemdServiceStatus('networking')
+    report +=f"The older service '{networkingStatus['service']}' is enabled: {networkingStatus['enabledStatus']}\n"
+    report +=f"The older service '{networkingStatus['service']}' is running: {networkingStatus['runningStatus']}\n"
+
     return report
 
 print(doExamCheck())
