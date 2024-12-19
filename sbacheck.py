@@ -205,6 +205,7 @@ def verifyRecursiveOwnership(directory, username):
             for name in dirs:
                 dir_path = os.path.join(root, name)
                 if os.stat(dir_path).st_uid != user_uid:
+                    print(dir_path)
                     return False
         
         return True
@@ -256,7 +257,7 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
             
             # Count how many files from the directory are in the tar archive
             count = sum(1 for f in dir_files if f in tar_files)
-            
+            print(count)
             # Check if the count is at least min_files
             return count >= min_files
     except FileNotFoundError as e:
@@ -339,7 +340,8 @@ print(f"Number of non-compliant permissions in backup directory: {checkBackupPer
 print(f"At least 10 files from /var/log in systemlogs.tar.gz: {checkLogTar}")
 print(f"itcfinal-backups soft link in place: {backupSoftlink}")
 
-
+#relative paths in tar files still not working
+# recursive ownership checking still not working
 
 #test=json.loads(subprocess.run(["ip", "-j", "addr", "show"], capture_output=True).stdout)
 #print(test)
