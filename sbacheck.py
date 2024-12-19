@@ -276,6 +276,44 @@ def checkSoftLink(source, target):
         print(f"Error: {e}")
         return False
 
+def getSystemdNetworkConfig(interface):
+    config_dir = '/etc/systemd/network/'
+    config_files = [f for f in os.listdir(config_dir) if f.endswith('.network')]
+    
+    ipv4_pattern = re.compile(r'Address=(\S+)/.*')
+    ipv4mask_pattern = re.compile(r'Address=\S+/(\d+)')
+    ipv4gateway_pattern = re.compile(r'Gateway=(\S+)')
+    dns_pattern = re.compile(r'DNS=(\S+)')
+    
+    network_config = {
+        'ipv4address': None,
+        'ipv4mask': None,
+        'ipv4gateway': None,
+        'dns': []
+    }
+    
+    for config_file in config_files:
+        with open(os.path.join(config_dir, config_file), 'r') as file:
+            content = file.read()
+            if f'[Match]\nName={interface}' in content:
+                ipv4_match = ipv4_pattern.search(content)
+                ipv4mask_match = ipv4mask_pattern.search(content)
+                ipv4gateway_match = ipv4gateway_pattern.search(content)
+                dns_matches = dns_pattern.findall(content)
+                
+                if ipv4_match:
+                    network_config['ipv4address'] = ipv4_match.group(1)
+                if ipv4mask_match:
+                    network_config['ipv4mask'] = ipv4mask_match.group(1)
+                if ipv4gateway_match:
+                    network_config['ipv4gateway'] = ipv4gateway_match.group(1)
+                if dns_matches:
+                    network_config['dns'] = dns_matches
+                
+                break
+    
+    return network_config
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -341,6 +379,10 @@ def doExamCheck():
     report +="------------------------------\n"
     report +="Part 5:\n"
     report +="------------------------------\n"
+    ens192StaticIP = getSystemdNetworkConfig('ens192')
+    report +=f"Static ens192 IPv4 Address is: {ens192StaticIP['ipv4address']}/{ens192StaticIP['ipv4mask']}\n"
+    report +=f"Active ens192 IPv4 Address is: {ipDetails['ens192']['ipv4']}/{ipDetails['ens192']['ipv4prefix']}\n"
+    
     return report
 
-print(doExamCheck)
+print(doExamCheck())
