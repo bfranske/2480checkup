@@ -429,13 +429,11 @@ def verifySystemdTimer(timer_name, service_name, schedule, command, user, group)
         timer_status = subprocess.check_output(['systemctl', 'is-active', timer_name]).decode().strip()
         if timer_status != 'active':
             return False, f"Timer {timer_name} is not active."
-
-        # Check if the service is active
-        service_status = subprocess.check_output(['systemctl', 'is-active', service_name]).decode().strip()
-        if service_status != 'active':
-            return False, f"Service {service_name} is not active."
+    except subprocess.CalledProcessError:
+            return False, f"Timer {timer_name} is not active."
 
         # Check the timer schedule
+    try:
         timer_info = subprocess.check_output(['systemctl', 'cat', timer_name]).decode()
         on_calendar_line = next((line for line in timer_info.splitlines() if 'OnCalendar=' in line), None)
         if on_calendar_line:
