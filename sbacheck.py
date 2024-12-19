@@ -398,7 +398,7 @@ def getWordpressTitles(url):
     site_title = html.unescape(site_title_match.group(1)) if site_title_match else 'No site title found'
     
     # Extract the title of the most recent blog post using regex
-    recent_post_match = re.search(r'<h2 class="wp-block-post-title">.*?<a.*?>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
+    recent_post_match = re.search(r'class="wp-block-post-title.*?"><a.*?>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
     recent_post_title = html.unescape(recent_post_match.group(1).strip()) if recent_post_match else 'No recent post found'
     
     return site_title, recent_post_title
