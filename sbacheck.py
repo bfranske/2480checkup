@@ -382,6 +382,30 @@ def checkPHPVersion(filePath, url):
             return f"Failed to retrieve the page. Status code: {response.status_code}"
     except Exception as e:
         return str(e)
+    
+def getWordpressTitles(url):
+    response = requests.get(url)
+    
+    # Check if the response status code is 200 OK
+    if response.status_code != 200:
+        return f"Error: {response.status_code}", f"Error: {response.status_code}"
+    
+    html_content = response.text
+    
+    # Extract the site title using regex
+    site_title_match = re.search(r'<title>(.*?)</title>', html_content, re.IGNORECASE)
+    site_title = site_title_match.group(1) if site_title_match else 'No site title found'
+    
+    # Extract the title of the most recent blog post using regex
+    recent_post_match = re.search(r'<article.*?<h2.*?>(.*?)</h2>', html_content, re.IGNORECASE | re.DOTALL)
+    if not recent_post_match:
+        # Try another common pattern for post titles
+        recent_post_match = re.search(r'<article.*?<a.*?>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
+    recent_post_title = recent_post_match.group(1).strip() if recent_post_match else 'No recent post found'
+    
+    return site_title, recent_post_title
+
+
 
 def doExamCheck():
     report = ''
@@ -466,7 +490,11 @@ def doExamCheck():
     report +=f"MariaDB Server is installed: {mariaDBPackage}\n"
     phpmysqlPackage = isPackageInstalled('php-mysql')
     report +=f"PHP-MySQL is installed: {phpmysqlPackage}\n"
-    
+    wordpressPackage = isPackageInstalled('wordpress')
+    report +=f"Wordpress DEB Package is installed: {wordpressPackage}\n"
+    wordpressSiteTitle,wordpressPostTitle = getWordpressTitles(basicURL+'/blog')
+    report +=f"Wordpress Site Title: {wordpressSiteTitle}\n"
+    report +=f"Wordpress Post Title: {wordpressPostTitle}\n"
     return report
 
 print(doExamCheck())
