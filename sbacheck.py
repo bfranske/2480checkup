@@ -11,6 +11,7 @@ import pwd
 import os
 import stat
 import tarfile
+import requests
 
 def getInterfaceDetails():
     ipData = {}
@@ -342,6 +343,20 @@ def checkSystemdServiceStatus(serviceName):
     except Exception as e:
         return f"An error occurred: {e}"
 
+def checkWebserver(url):
+    try:
+        response = requests.head(url, timeout=5)
+        if response.status_code == 200:
+            server = response.headers.get('Server')
+            if server:
+                return server
+            else:
+                return f"Could not determine the web server software for {url}"
+        else:
+            return None
+    except requests.RequestException:
+        return None
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -416,7 +431,8 @@ def doExamCheck():
     networkingStatus=checkSystemdServiceStatus('networking')
     report +=f"The older service '{networkingStatus['service']}' is enabled: {networkingStatus['enabledStatus']}\n"
     report +=f"The older service '{networkingStatus['service']}' is running: {networkingStatus['runningStatus']}\n"
-
+    webserver=checkWebserver('http://'+ipDetails['ens192']['ipv4'])
+    report +=f"The webserver running is: {webserver}\n"
     return report
 
 print(doExamCheck())
