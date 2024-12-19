@@ -357,6 +357,32 @@ def checkWebserver(url):
     except requests.RequestException:
         return None
 
+def checkPHPVersion(filePath, url):
+    # PHP code to display the version of PHP running on the system
+    php_code = "<?php\nphpinfo();\n?>"
+    
+    # Write the PHP code to the file
+    with open(filePath, 'w') as file:
+        file.write(php_code)
+    
+    os.chmod(filePath, 0o755)
+
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            content = response.text
+            start = content.find('<h1 class="p">PHP Version ') + len('<h1 class="p">PHP Version ')
+            end = content.find('</h1>', start)
+            if start != -1 and end != -1:
+                php_version = content[start:end]
+                return php_version
+            else:
+                return None
+        else:
+            return f"Failed to retrieve the page. Status code: {response.status_code}"
+    except Exception as e:
+        return str(e)
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -431,8 +457,12 @@ def doExamCheck():
     networkingStatus=checkSystemdServiceStatus('networking')
     report +=f"The older service '{networkingStatus['service']}' is enabled: {networkingStatus['enabledStatus']}\n"
     report +=f"The older service '{networkingStatus['service']}' is running: {networkingStatus['runningStatus']}\n"
-    webserver=checkWebserver('http://'+ipDetails['ens192']['ipv4'])
-    report +=f"The webserver running is: {webserver}\n"
+    basicURL = 'http://'+ipDetails['ens192']['ipv4']
+    webserver=checkWebserver(basicURL)
+    report +=f"The webserver running at {basicURL} is: {webserver}\n"
+    phpVersion=checkPHPVersion('/var/www/html/testphpver.php',basicURL+'/testphpver.php')
+    report +=f"The php version running is: {phpVersion}\n"
+
     return report
 
 print(doExamCheck())
