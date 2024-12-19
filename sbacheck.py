@@ -240,11 +240,11 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
     try:
         with tarfile.open(tar_path, 'r:gz') as tar:
             # Get the list of files in the tar archive
-            tar_files = tar.getnames()
+            tar_files = [os.path.normpath(f) for f in tar.getnames()]
             print(tar_files)
             
             # Get the list of files in the specified directory
-            dir_files = [os.path.join(dir_path, f) for f in os.listdir(dir_path)]
+            dir_files = [os.path.normpath(os.path.relpath(os.path.join(dir_path, f), dir_path)) for f in os.listdir(dir_path)]
             print(dir_files)
             
             # Count how many files from the directory are in the tar archive
@@ -262,6 +262,7 @@ def checkSoftLink(source, target):
         if os.path.islink(source):
             # Get the path the symbolic link points to
             link_target = os.readlink(source)
+            print(link_target)
             # Check if it matches the target path
             if link_target == target:
                 return True
