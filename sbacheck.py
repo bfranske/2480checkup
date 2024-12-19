@@ -243,7 +243,6 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
         with tarfile.open(tar_path, 'r:gz') as tar:
             # Get the list of files in the tar archive
             tar_files = [os.path.normpath(f) for f in tar.getnames()]
-            print(tar_files)
             
             # Get the list of files in the specified directory
             dir_files = []
@@ -253,11 +252,9 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
                     full_path = str(os.path.join(root, f))
                     dir_files.append(os.path.normpath(relative_path))
                     dir_files.append(os.path.normpath(full_path))
-            print(dir_files)
             
             # Count how many files from the directory are in the tar archive
             count = sum(1 for f in dir_files if f in tar_files)
-            print(count)
             # Check if the count is at least min_files
             return count >= min_files
     except FileNotFoundError as e:
