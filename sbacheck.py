@@ -203,7 +203,7 @@ def verifyRecursiveOwnership(directory, username):
             # Check the ownership of each subdirectory
             for name in dirs:
                 dir_path = os.path.join(root, name)
-                if os.path.islink(file_path):
+                if os.path.islink(dir_path):
                     pass
                 else:
                     if os.stat(dir_path).st_uid != user_uid:
@@ -337,9 +337,10 @@ print(f"Recursive ownership of /home/examuser/backups is linuxgeek: {checkBackup
 print(f"Number of non-compliant permissions in backup directory: {checkBackupPermissions}")
 print(f"At least 10 files from /var/log in systemlogs.tar.gz: {checkLogTar}")
 print(f"itcfinal-backups soft link in place: {backupSoftlink}")
+print("------------------------------")
+print("Part 5:")
+print("------------------------------")
 
-#relative paths in tar files still not working
-# recursive ownership checking still not working
 
 #test=json.loads(subprocess.run(["ip", "-j", "addr", "show"], capture_output=True).stdout)
 #print(test)
