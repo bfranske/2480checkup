@@ -247,7 +247,7 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
             dir_files = []
             for root, _, files in os.walk(dir_path):
                 for f in files:
-                    relative_path = os.path.relpath(os.path.join(root, f), dir_path)
+                    relative_path = os.path.relpath(os.path.join(root, f), dir_path+'/../')
                     full_path = str(os.path.join(root, f))
                     dir_files.append(os.path.normpath(relative_path))
                     dir_files.append(os.path.normpath(full_path))
