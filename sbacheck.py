@@ -426,11 +426,11 @@ def checkCronSchedule(command):
 def verifySystemdTimer(timer_name, service_name, schedule, command, user, group):
     try:
         # Check if the timer is active
-        timer_status = subprocess.check_output(['systemctl', 'is-active', timer_name]).decode().strip()
-        if timer_status != 'active':
-            return False, f"Timer {timer_name} is not active."
+        timer_status = subprocess.check_output(['systemctl', 'is-enabled', timer_name]).decode().strip()
+        if timer_status != 'enabled':
+            return False, f"Timer {timer_name} is not enabled."
     except subprocess.CalledProcessError:
-            return False, f"Timer {timer_name} is not active."
+            return False, f"Timer {timer_name} is not enabled."
 
         # Check the timer schedule
     try:
@@ -550,7 +550,7 @@ def doExamCheck():
     report +="------------------------------\n"
     updatedbCronjob = checkCronSchedule('updatedb')
     report +=f"Root is running updatedb on cron schedule: {updatedbCronjob}\n"
-    touchTimerCorrect,touchTimerMessage = verifySystemdTimer('makefile.timer', 'makefile.service', '*:0/10:0', 'touch /home/examuser/itcfinal/timertest', 'examuser', 'student')
+    touchTimerCorrect,touchTimerMessage = verifySystemdTimer('makefile.timer', 'makefile.service', '*:0/10:0', 'touch /home/examuser/itcfinal/timertest', 'examuser', 'students')
     report +=f"Checking systemd timer: {touchTimerMessage}\n"
 
     return report
