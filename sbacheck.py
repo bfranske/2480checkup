@@ -276,71 +276,71 @@ def checkSoftLink(source, target):
         print(f"Error: {e}")
         return False
 
-ipDetails = getInterfaceDetails()
-systemSetupDate = getRootFSCreationDate()
-hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8')
-domainname = systemDomainName()
-rootPasswordTest = testPassword('root','r00tp@ss')
-examPasswordTest = testPassword('examuser','GoodLuck')
-examSudoTest = checkSudo('examuser')
-linuxPasswordTest = testPassword('linuxgeek','linuxi$fun!')
-linuxSudoTest = checkSudo('linuxgeek')
-studentGroupTest = doesGroupExist('students')
-if studentGroupTest:
-    studentGroupMembers = grp.getgrnam('students').gr_mem
-else:
-    studentGroupMembers = None
-lastTenLinesCommand = checkBASHHistory('examuser', 'tail -10 /var/log/dpkg.log > /home/linuxgeek/recent-packages') or checkBASHHistory('examuser', 'tail -n 10 /var/log/dpkg.log > /home/linuxgeek/recent-packages')
-recentPackagesUser,recentPackagesGroup = getFileOwnership('/home/linuxgeek/recent-packages')
-sectionThreePackages = isPackageInstalled('python3') and isPackageInstalled('curl') and isPackageInstalled('locate') and isPackageInstalled('python3-requests')
-itcfinalDirectory = directoryExists('/home/examuser/itcfinal')
-dmesgInKernmsg = fileContainsRegex('/home/examuser/itcfinal/kernmsg.txt', r'^\[\s*\d+\.\d+\]\s+ Command line: BOOT_IMAGE=.* root=.*')
-checkEtcBackup = checkCommonFiles('/etc/', '/home/examuser/backups/orig-config/', 10)
-checkPasswdBackup = verifyCopiedLines('/etc/passwd','/home/examuser/backups/system-users', 10)
-checkBackupOwnership = verifyRecursiveOwnership('/home/examuser/backups', 'linuxgeek')
-checkBackupPermissions = checkPermissions('/home/examuser/backups', ['-rw-------', '-rwx------'])
-checkLogTar = checkFilesInTar('/home/examuser/itcfinal/systemlogs.tar.gz','/var/log',10)
-backupSoftlink = checkSoftLink('/home/linuxgeek/itcfinal-backups','/home/examuser/backups/')
+def doExamCheck():
+    report = ''
+    report +="------------------------------\n"
+    report +="System Report:\n"
+    report +="------------------------------\n"
+    systemSetupDate = getRootFSCreationDate()
+    report +=f"The system was installed on: {systemSetupDate}\n"
+    report +="------------------------------\n"
+    report +="Part 2:\n"
+    report +="------------------------------\n"
+    ipDetails = getInterfaceDetails()
+    report +=f"ens192 is {ipDetails['ens192']['state']} with IP Address: {ipDetails['ens192']['ipv4']}/{ipDetails['ens192']['ipv4prefix']}\n"
+    hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8')
+    report +=f"The system host name is {hostname}\n"
+    domainname = systemDomainName()
+    report +=f"The system domain name is {domainname}\n"
+    rootPasswordTest = testPassword('root','r00tp@ss')
+    report +=f"The root user account has the right password: {rootPasswordTest}\n"
+    report +="------------------------------\n"
+    report +="Part 3:\n"
+    report +="------------------------------\n"
+    examPasswordTest = testPassword('examuser','GoodLuck')
+    report +=f"The examuser user account has the right password: {examPasswordTest}\n"
+    examSudoTest = checkSudo('examuser')
+    report +=f"The examuser user account has sudo: {examSudoTest}\n"
+    linuxPasswordTest = testPassword('linuxgeek','linuxi$fun!')
+    report +=f"The linuxgeek user account has the right password: {linuxPasswordTest}\n"
+    linuxSudoTest = checkSudo('linuxgeek')
+    report +=f"The linuxgeek user account has sudo: {linuxSudoTest}\n"
+    studentGroupTest = doesGroupExist('students')
+    report +=f"The student group exists: {studentGroupTest}\n"
+    if studentGroupTest:
+        studentGroupMembers = grp.getgrnam('students').gr_mem
+    else:
+        studentGroupMembers = None
+    report +=f"student group members: {studentGroupMembers}\n"
+    lastTenLinesCommand = checkBASHHistory('examuser', 'tail -10 /var/log/dpkg.log > /home/linuxgeek/recent-packages') or checkBASHHistory('examuser', 'tail -n 10 /var/log/dpkg.log > /home/linuxgeek/recent-packages')
+    report +=f"Did examuser create a file of recent packages with 10 lines: {lastTenLinesCommand}\n"
+    recentPackagesUser,recentPackagesGroup = getFileOwnership('/home/linuxgeek/recent-packages')
+    report +=f"recent-packages file owner is: {recentPackagesUser}\n"
+    report +=f"recent-packages file group owner is: {recentPackagesGroup}\n"
+    sectionThreePackages = isPackageInstalled('python3') and isPackageInstalled('curl') and isPackageInstalled('locate') and isPackageInstalled('python3-requests')
+    report +=f"Section 3 required packages are installed: {sectionThreePackages}\n"
+    report +="------------------------------\n"
+    report +="Part 4:\n"
+    report +="------------------------------\n"
+    itcfinalDirectory = directoryExists('/home/examuser/itcfinal')
+    report +=f"itcfinal directory exists: {itcfinalDirectory}\n"
+    dmesgInKernmsg = fileContainsRegex('/home/examuser/itcfinal/kernmsg.txt', r'^\[\s*\d+\.\d+\]\s+Command line: BOOT_IMAGE=.* root=.*')
+    report +=f"kernmsg.txt contains dmesg output: {dmesgInKernmsg}\n"
+    checkEtcBackup = checkCommonFiles('/etc/', '/home/examuser/backups/orig-config/', 10)
+    report +=f"At least 10 files from /etc/ are in backups/orig-config/: {checkEtcBackup}\n"
+    checkPasswdBackup = verifyCopiedLines('/etc/passwd','/home/examuser/backups/system-users', 10)
+    report +=f"Password file was backed up and renamed: {checkPasswdBackup}\n"
+    checkBackupOwnership = verifyRecursiveOwnership('/home/examuser/backups', 'linuxgeek')
+    report +=f"Recursive ownership of /home/examuser/backups is linuxgeek: {checkBackupOwnership}\n"
+    checkBackupPermissions = checkPermissions('/home/examuser/backups', ['-rw-------', '-rwx------'])
+    report +=f"Number of non-compliant permissions in backup directory: {checkBackupPermissions}\n"
+    checkLogTar = checkFilesInTar('/home/examuser/itcfinal/systemlogs.tar.gz','/var/log',10)
+    report +=f"At least 10 files from /var/log in systemlogs.tar.gz: {checkLogTar}\n"
+    backupSoftlink = checkSoftLink('/home/linuxgeek/itcfinal-backups','/home/examuser/backups/')
+    report +=f"itcfinal-backups soft link in place: {backupSoftlink}\n"
+    report +="------------------------------\n"
+    report +="Part 5:\n"
+    report +="------------------------------\n"
+    return report
 
-print("------------------------------")
-print("System Report:")
-print("------------------------------")
-print(f"The system was installed on: {systemSetupDate}")
-print("------------------------------")
-print("Part 2:")
-print("------------------------------")
-print(f"ens192 is {ipDetails['ens192']['state']} with IP Address: {ipDetails['ens192']['ipv4']}/{ipDetails['ens192']['ipv4prefix']}")
-print(f"The system host name is {hostname}")
-print(f"The system domain name is {domainname}")
-print(f"The root user account has the right password: {rootPasswordTest}")
-print("------------------------------")
-print("Part 3:")
-print("------------------------------")
-print(f"The examuser user account has the right password: {examPasswordTest}")
-print(f"The examuser user account has sudo: {examSudoTest}")
-print(f"The linuxgeek user account has the right password: {linuxPasswordTest}")
-print(f"The linuxgeek user account has sudo: {linuxSudoTest}")
-print(f"The student group exists: {studentGroupTest}")
-print(f"student group members: {studentGroupMembers}")
-print(f"Did examuser create a file of recent packages with 10 lines: {lastTenLinesCommand}")
-print(f"recent-packages file owner is: {recentPackagesUser}")
-print(f"recent-packages file group owner is: {recentPackagesGroup}")
-print(f"Section 3 required packages are installed: {sectionThreePackages}")
-print("------------------------------")
-print("Part 4:")
-print("------------------------------")
-print(f"itcfinal directory exists: {itcfinalDirectory}")
-print(f"kernmsg.txt contains dmesg output: {dmesgInKernmsg}")
-print(f"At least 10 files from /etc/ are in backups/orig-config/: {checkEtcBackup}")
-print(f"Password file was backed up and renamed: {checkPasswdBackup}")
-print(f"Recursive ownership of /home/examuser/backups is linuxgeek: {checkBackupOwnership}")
-print(f"Number of non-compliant permissions in backup directory: {checkBackupPermissions}")
-print(f"At least 10 files from /var/log in systemlogs.tar.gz: {checkLogTar}")
-print(f"itcfinal-backups soft link in place: {backupSoftlink}")
-print("------------------------------")
-print("Part 5:")
-print("------------------------------")
-
-
-#test=json.loads(subprocess.run(["ip", "-j", "addr", "show"], capture_output=True).stdout)
-#print(test)
+print(doExamCheck)
