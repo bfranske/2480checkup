@@ -205,7 +205,7 @@ def verifyRecursiveOwnership(directory, username):
             for name in dirs:
                 dir_path = os.path.join(root, name)
                 if os.stat(dir_path).st_uid != user_uid:
-                    print(dir_path)
+                    #print(dir_path)
                     return False
         
         return True
