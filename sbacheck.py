@@ -198,6 +198,7 @@ def verifyRecursiveOwnership(directory, username):
                     pass
                 else:
                     if os.stat(file_path).st_uid != user_uid:
+                        print(file_path)
                         return False
             
             # Check the ownership of each subdirectory
