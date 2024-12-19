@@ -552,9 +552,9 @@ def doExamCheck():
     report +="------------------------------\n"
     updatedbCronjob = checkCronSchedule('updatedb')
     report +=f"Root is running updatedb on cron schedule: {updatedbCronjob}\n"
-    touchTimerCorrect,touchTimerMessage = verifySystemdTimer('makefile', 'makefile', '*:0/10:0', 'touch /home/examuser/itcfinal/timertest', 'examuser', 'student')
+    touchTimerCorrect,touchTimerMessage = verifySystemdTimer('makefile.timer', 'makefile.service', '*:0/10:0', 'touch /home/examuser/itcfinal/timertest', 'examuser', 'student')
     report +=f"Checking systemd timer: {touchTimerMessage}\n"
-    
+
     return report
 
 print(doExamCheck())
