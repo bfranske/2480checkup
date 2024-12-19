@@ -12,6 +12,7 @@ import os
 import stat
 import tarfile
 import requests
+import html
 
 def getInterfaceDetails():
     ipData = {}
@@ -394,14 +395,11 @@ def getWordpressTitles(url):
     
     # Extract the site title using regex
     site_title_match = re.search(r'<title>(.*?)</title>', html_content, re.IGNORECASE)
-    site_title = site_title_match.group(1) if site_title_match else 'No site title found'
+    site_title = html.unescape(site_title_match.group(1)) if site_title_match else 'No site title found'
     
     # Extract the title of the most recent blog post using regex
-    recent_post_match = re.search(r'<article.*?<h2.*?>(.*?)</h2>', html_content, re.IGNORECASE | re.DOTALL)
-    if not recent_post_match:
-        # Try another common pattern for post titles
-        recent_post_match = re.search(r'<article.*?<a.*?>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
-    recent_post_title = recent_post_match.group(1).strip() if recent_post_match else 'No recent post found'
+    recent_post_match = re.search(r'<h2 class="wp-block-post-title">.*?<a.*?>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
+    recent_post_title = html.unescape(recent_post_match.group(1).strip()) if recent_post_match else 'No recent post found'
     
     return site_title, recent_post_title
 
