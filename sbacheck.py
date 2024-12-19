@@ -195,19 +195,19 @@ def verifyRecursiveOwnership(directory, username):
             for name in files:
                 file_path = os.path.join(root, name)
                 if os.path.islink(file_path):
-                    #print(f"Link: {file_path}")
                     pass
                 else:
                     if os.stat(file_path).st_uid != user_uid:
-                        print(f"Bad UID: {file_path}")
                         return False
             
             # Check the ownership of each subdirectory
             for name in dirs:
                 dir_path = os.path.join(root, name)
-                if os.stat(dir_path).st_uid != user_uid:
-                    print(f"Bad Dir: {dir_path}")
-                    return False
+                if os.path.islink(file_path):
+                    pass
+                else:
+                    if os.stat(dir_path).st_uid != user_uid:
+                        return False
         
         return True
     except KeyError:
