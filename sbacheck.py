@@ -409,7 +409,7 @@ def checkCronSchedule(command):
         result = subprocess.run(['crontab', '-l', '-u', 'root'], capture_output=True, text=True)
         
         if result.returncode != 0:
-            return "Failed to read root's crontab."
+            return "Failed to read root's crontab, may not exist."
         
         # Check if the specified command is in the crontab and return its schedule
         cronjobs = result.stdout.splitlines()
@@ -422,6 +422,42 @@ def checkCronSchedule(command):
     
     except Exception as e:
         return f"An error occurred: {e}"
+
+def verifySystemdTimer(timer_name, service_name, schedule, command, user, group):
+    try:
+        # Check if the timer is active
+        timer_status = subprocess.check_output(['systemctl', 'is-active', timer_name]).decode().strip()
+        if timer_status != 'active':
+            return False, f"Timer {timer_name} is not active."
+
+        # Check if the service is active
+        service_status = subprocess.check_output(['systemctl', 'is-active', service_name]).decode().strip()
+        if service_status != 'active':
+            return False, f"Service {service_name} is not active."
+
+        # Check the timer schedule
+        timer_info = subprocess.check_output(['systemctl', 'cat', timer_name]).decode()
+        on_calendar_line = next((line for line in timer_info.splitlines() if 'OnCalendar=' in line), None)
+        if on_calendar_line:
+            actual_schedule = on_calendar_line.split('=')[1].strip()
+            if schedule not in actual_schedule:
+                return False, f"Timer {timer_name} does not match the specified schedule. It is set to {actual_schedule}."
+        else:
+            return False, f"Timer {timer_name} does not have an OnCalendar schedule."
+
+        # Check the service command, user, and group
+        service_info = subprocess.check_output(['systemctl', 'cat', service_name]).decode()
+        if command not in service_info:
+            return False, f"Service {service_name} is not running the specified command."
+        if f"User={user}" not in service_info:
+            return False, f"Service {service_name} is not running as the specified user."
+        if f"Group={group}" not in service_info:
+            return False, f"Service {service_name} is not running as the specified group."
+
+        return True, "All checks passed."
+
+    except subprocess.CalledProcessError as e:
+        return False, str(e)
 
 def doExamCheck():
     report = ''
@@ -516,7 +552,9 @@ def doExamCheck():
     report +="------------------------------\n"
     updatedbCronjob = checkCronSchedule('updatedb')
     report +=f"Root is running updatedb on cron schedule: {updatedbCronjob}\n"
-
+    touchTimerCorrect,touchTimerMessage = verifySystemdTimer('makefile', 'makefile', '*:0/10:0', 'touch /home/examuser/itcfinal/timertest', 'examuser', 'student')
+    report +=f"Checking systemd timer: {touchTimerMessage}\n"
+    
     return report
 
 print(doExamCheck())
