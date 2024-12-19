@@ -4,6 +4,7 @@ import subprocess
 import json
 import re
 from datetime import datetime
+import time
 import socket
 import pam
 import grp
@@ -457,6 +458,38 @@ def verifySystemdTimer(timer_name, service_name, schedule, command, user, group)
     except subprocess.CalledProcessError as e:
         return False, str(e)
 
+def getLastModifiedDate(file_path):
+    # Check if the file exists
+    if not os.path.exists(file_path):
+        return f"The file '{file_path}' does not exist."
+    
+    # Get the last modified time
+    last_modified_time = os.path.getmtime(file_path)
+    
+    # Convert the time to a readable format
+    last_modified_date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_modified_time))
+    
+    return last_modified_date
+
+def verifyJournalInFile(numlines,filePath):
+    # Get the first 100 lines of the systemd journal
+    journal_output = subprocess.run(['journalctl', '-n', numlines, '--no-pager', '--reverse'], capture_output=True, text=True)
+    journal_lines = journal_output.stdout.splitlines()[:numlines]
+
+    # Check if the file exists
+    if not os.path.exists(filePath):
+        return f"Error: '{filePath}' does not exist."
+
+    # Read the first 100 lines of the file
+    with open('filePath', 'r') as file:
+        file_lines = [next(file) for _ in range(numlines)]
+
+    # Compare the lines
+    if journal_lines == file_lines:
+        return "Lines Match"
+    else:
+        return "No Match"
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -552,7 +585,10 @@ def doExamCheck():
     report +=f"Root is running updatedb on cron schedule: {updatedbCronjob}\n"
     touchTimerCorrect,touchTimerMessage = verifySystemdTimer('makefile.timer', 'makefile.service', '*:0/10:0', 'touch /home/examuser/itcfinal/timertest', 'examuser', 'students')
     report +=f"Checking systemd timer: {touchTimerMessage}\n"
-
+    touchTimerLastMod = getLastModifiedDate('/home/examuser/itcfinal/timertest')
+    report +=f"Systemd Timer File Last Modified: {touchTimerLastMod}\n"
+    journalCopy = verifyJournalInFile(100,'/home/examuser/itcfinal/biglog')
+    report +=f"System Journal Copied to biglog (first 100 lines at least): {journalCopy}\n"
     return report
 
 print(doExamCheck())
