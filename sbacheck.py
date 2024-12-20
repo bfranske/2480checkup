@@ -851,7 +851,7 @@ def doExamCheck():
     systemSetupDate = getRootFSCreationDate()
     report +=f"The system was installed on: {systemSetupDate}\n"
     report +="------------------------------\n"
-    report +="Part 2:\n"
+    report +="Part 2: Basic Installation\n"
     report +="------------------------------\n"
     ipDetails = getInterfaceDetails()
     report +=f"ens192 is {ipDetails['ens192']['state']} with IP Address: {ipDetails['ens192']['ipv4']}/{ipDetails['ens192']['ipv4prefix']}\n"
@@ -864,7 +864,7 @@ def doExamCheck():
     rootPasswordTest = testPassword('root','r00tp@ss')
     report +=f"The root user account has the right password: {rootPasswordTest}\n"
     report +="------------------------------\n"
-    report +="Part 3:\n"
+    report +="Part 3: Users, Groups, Software\n"
     report +="------------------------------\n"
     examPasswordTest = testPassword('examuser','GoodLuck')
     report +=f"The examuser user account has the right password: {examPasswordTest}\n"
@@ -889,7 +889,7 @@ def doExamCheck():
     sectionThreePackages = isPackageInstalled('python3') and isPackageInstalled('curl') and isPackageInstalled('locate') and isPackageInstalled('python3-requests')
     report +=f"Section 3 required packages are installed: {sectionThreePackages}\n"
     report +="------------------------------\n"
-    report +="Part 4:\n"
+    report +="Part 4: System Navigation and File Utilities\n"
     report +="------------------------------\n"
     itcfinalDirectory = directoryExists('/home/examuser/itcfinal')
     report +=f"itcfinal directory exists: {itcfinalDirectory}\n"
