@@ -755,7 +755,7 @@ def getFirewalldZoneRules(zone):
     
     # Check if the command was successful
     if result.returncode != 0:
-        raise Exception(f"Error running firewall-cmd: {result.stderr}")
+        return result.stderr
     
     # Split the output into lines
     lines = result.stdout.splitlines()
