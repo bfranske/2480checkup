@@ -14,7 +14,6 @@ import stat
 import tarfile
 import requests
 import html
-import parted
 
 def getInterfaceDetails():
     ipData = {}
@@ -491,16 +490,62 @@ def verifyJournalInFile(numlines,filePath):
     else:
         return "No Match"
     
-def getPartitionSizes(device):
-    disk = parted.getDevice(device)
-    partitions = disk.partitions
+def getParitionSizes(device):
+    # Run the lsblk command to get partition information in JSON format
+    result = subprocess.run(['lsblk', '-b', '-o', 'NAME,SIZE', '-J', device], stdout=subprocess.PIPE)
+    output = result.stdout.decode('utf-8')
+
+    # Parse the JSON output
+    data = json.loads(output)
+
+    # Initialize an empty dictionary to store partition sizes
     partition_sizes = {}
 
-    for partition in partitions:
-        size_gb = partition.getLength('B') / (1024 ** 3)
-        partition_sizes[partition.number] = round(size_gb, 3)
+    # Iterate over the block devices and their children (partitions)
+    for block_device in data['blockdevices']:
+        for partition in block_device.get('children', []):
+            partition_name = partition['name']
+            size_bytes = int(partition['size'])
+            size_gb = round(size_bytes / (1024 ** 3), 2)
+            partition_sizes[partition_name] = size_gb
 
     return partition_sizes
+
+def getFilesystemTypes(device):
+    # Run the lsblk command and get the output in JSON format
+    result = subprocess.run(['lsblk', '-o', 'NAME,FSTYPE,SIZE', '-J'], stdout=subprocess.PIPE)
+    output = result.stdout.decode('utf-8')
+    
+    # Parse the JSON output
+    data = json.loads(output)
+    
+    # Initialize an empty dictionary to store the filesystem info
+    fs_info = {}
+    
+    # Iterate over each block device
+    for block_device in data['blockdevices']:
+        # Check if the block device is the specified device
+        if block_device['name'] == device:
+            # Iterate over each partition of the device
+            for partition in block_device['children']:
+                # Convert size to GB and round to the nearest hundredth
+                size_str = partition['size']
+                if size_str.endswith('G'):
+                    size_gb = round(float(size_str.replace('G', '')), 2)
+                elif size_str.endswith('M'):
+                    size_gb = round(float(size_str.replace('M', '')) / 1024, 2)
+                elif size_str.endswith('K'):
+                    size_gb = round(float(size_str.replace('K', '')) / (1024 * 1024), 2)
+                else:
+                    size_gb = 0  # Handle unexpected size formats
+                
+                # Add the partition number, filesystem type, and size to the dictionary
+                fs_info[partition['name']] = {
+                    'fstype': partition['fstype'],
+                    'size_gb': size_gb
+                }
+    
+    return fs_info
 
 def doExamCheck():
     report = ''
@@ -601,8 +646,10 @@ def doExamCheck():
     report +=f"Systemd Timer File Last Modified: {touchTimerLastMod}\n"
     journalCopy = verifyJournalInFile(100,'/home/examuser/itcfinal/biglog')
     report +=f"System Journal Copied to biglog (first 100 lines at least): {journalCopy}\n"
-    sdbPartitions = getPartitionSizes('/dev/sdb')
+    sdbPartitions = getParitionSizes('/dev/sdb')
     report +=f"SDB Partitions: {sdbPartitions}\n"
+    sdbFilesystems = getFilesystemTypes('/dev/sdb')
+    report +=f"SDB Filesystems: {sdbFilesystems}\n"
     return report
 
 print(doExamCheck())
