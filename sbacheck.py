@@ -633,24 +633,20 @@ def getResolvedDNSServers(interface):
 def getDNSRecord(domain, record_type='A', dns_server=None):
     try:
         # Prepare the dig command with the optional DNS server and record type
-        command = ['dig', '+short', '+answer', domain, record_type, '+json']
+        command = ['dig', '+short', domain, record_type]
         if dns_server:
             command.insert(1, f'@{dns_server}')
         
-        # Run the dig command with JSON output
+        # Run the dig command
         result = subprocess.run(command, capture_output=True, text=True, check=True)
-        # Parse the JSON output
-        dig_output = json.loads(result.stdout)
+        output = result.stdout.strip().split('\n')
         
-        # Extract the specified record type from the JSON output
-        records = [answer['data'] for answer in dig_output['Answer'] if answer['type'] == record_type]
+        # Filter out any empty strings from the output
+        records = [line for line in output if line]
         
         return records
     except subprocess.CalledProcessError as e:
         print(f"Error running dig command: {e}")
-        return None
-    except json.JSONDecodeError as e:
-        print(f"Error parsing JSON output: {e}")
         return None
 
 def doExamCheck():
@@ -665,7 +661,7 @@ def doExamCheck():
     report +="------------------------------\n"
     ipDetails = getInterfaceDetails()
     report +=f"ens192 is {ipDetails['ens192']['state']} with IP Address: {ipDetails['ens192']['ipv4']}/{ipDetails['ens192']['ipv4prefix']}\n"
-    hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8')
+    hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8').strip()
     report +=f"The system host name is {hostname}\n"
     podID = hostname.split('-')[-1]
     report +=f"The POD ID Letter is {podID}\n"
@@ -779,52 +775,52 @@ def doExamCheck():
     lookupDomain = 'local.sba-'+podID+'.itc2480.campus.ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     recordType = 'A'
     lookupDomain = 'sba-'+podID+'.itc2480.campus.ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     recordType = 'A'
     lookupDomain = 'mailserver.sba-'+podID+'.itc2480.campus.ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     recordType = 'CNAME'
     lookupDomain = 'www.sba-'+podID+'.itc2480.campus.ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     recordType = 'MX'
     lookupDomain = 'sba-'+podID+'.itc2480.campus.ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     recordType = 'TXT'
     lookupDomain = 'sba-'+podID+'.itc2480.campus.ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     recordType = 'A'
     lookupDomain = 'ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     recordType = 'CNAME'
     lookupDomain = 'info.ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     recordType = 'MX'
     lookupDomain = 'ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     recordType = 'TXT'
     lookupDomain = 'ihitc.net'
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
     return report
 
 print(doExamCheck())
