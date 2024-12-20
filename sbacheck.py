@@ -472,13 +472,13 @@ def getLastModifiedDate(file_path):
     return last_modified_date
 
 def verifyJournalInFile(numlines,filePath):
-    # Get the first 100 lines of the systemd journal
-    journal_output = subprocess.run(['journalctl', '--no-pager', '|', 'head', '-100'], capture_output=True, text=True)
-    journal_lines = journal_output.stdout.splitlines()[:numlines]
-
     # Check if the file exists
     if not os.path.exists(filePath):
         return f"Error: '{filePath}' does not exist."
+
+    # Get the first numlines of the systemd journal
+    journal_output = subprocess.run(f'journalctl --no-pager | head -n {numlines}', capture_output=True, text=True, shell=True)
+    journal_lines = journal_output.stdout.splitlines()
 
     # Read the first 100 lines of the file
     file_lines = []
