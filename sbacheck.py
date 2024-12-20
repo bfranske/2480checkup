@@ -602,12 +602,19 @@ def verifyCachingNameserver(bindConfigFile='/etc/bind/named.conf.options', forwa
         with open(bindConfigFile, 'r') as file:
             config = file.read()
        
-        # Check if the forwarder IP is set correctly
-        forwarder = re.search(r'forwarders\s*{[^}]*' + re.escape(forwarderIP) + r';', config)
+        # Check if the forwarder IP is set correctly and not commented out
+        forwarder_pattern = r'forwarders\s*{[^}]*' + re.escape(forwarderIP) + r';'
+        forwarder = re.search(forwarder_pattern, config)
         if not forwarder:
             return f"Forwarder IP {forwarderIP} is not set correctly."
         
-        return "BIND9 is set up correctly as a caching nameserver with the specified forwarder."
+        # Ensure the forwarder is not commented out with //
+        lines = config.split('\n')
+        for line in lines:
+            if re.search(forwarder_pattern, line) and not line.strip().startswith('//'):
+                return "Correct forwarder."
+        
+        return f"Forwarder IP {forwarderIP} is commented out."
     
     except FileNotFoundError:
         return f"Configuration file {bindConfigFile} not found."
