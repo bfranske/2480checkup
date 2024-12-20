@@ -798,6 +798,7 @@ def getFirewalldPolicy(policy_name):
         policy_info = subprocess.check_output(['firewall-cmd', '--info-policy', policy_name], text=True)
         
         for line in policy_info.split('\n'):
+            line = line.strip()
             if line.startswith('ingress-zones:'):
                 result['ingress_zones'] = line.split(':')[1].strip().split()
             elif line.startswith('egress-zones:'):
@@ -809,6 +810,38 @@ def getFirewalldPolicy(policy_name):
         print(f"Error retrieving policy information: {e}")
     
     return result
+
+def checkScriptDetails(path, filenameNoExtension):
+    # Check if the file with .sh or .py extension exists
+    sh_file = os.path.join(path, filenameNoExtension + '.sh')
+    py_file = os.path.join(path, filenameNoExtension + '.py')
+    
+    if os.path.isfile(sh_file):
+        full_path = sh_file
+    elif os.path.isfile(py_file):
+        full_path = py_file
+    else:
+        return {"exists": False, "message": "File with .sh or .py extension does not exist"}
+
+    # Get file details
+    file_stat = os.stat(full_path)
+    user = pwd.getpwuid(file_stat.st_uid).pw_name
+    group = grp.getgrgid(file_stat.st_gid).gr_name
+    permissions = stat.filemode(file_stat.st_mode)
+
+    # Return the details in a dictionary
+    return {
+        "exists": True,
+        "full_path": full_path,
+        "user": user,
+        "group": group,
+        "permissions": permissions
+    }
+
+def readFileAsString(filePath):
+    with open(filePath, 'r') as file:
+        contents = file.read()
+    return contents
 
 def doExamCheck():
     report = ''
@@ -1002,7 +1035,22 @@ def doExamCheck():
     for policy in firewalldPolicies:
         policyDetails = getFirewalldPolicy(policy)
         report +=f"firewalld policy {policy}: {policyDetails}\n"
-
+    report +="------------------------------\n"
+    report +="Part 10: Scripting\n"
+    report +="------------------------------\n"
+    scriptInfo = checkScriptDetails('/home/examuser/','myscript')
+    if scriptInfo['exists']:
+        report +=f"script path: {scriptInfo['full_path']}\n"
+        report +=f"script user: {scriptInfo['user']}\n"
+        report +=f"script group: {scriptInfo['group']}\n"
+        report +=f"script permissions: {scriptInfo['permissions']}\n"
+        scriptFile = readFileAsString(scriptInfo['full_path'])
+        report +="-------------BEGIN SCRIPT---------------\n"
+        report +=scriptFile
+        report +="-------------END SCRIPT-----------------\n"
+    else:
+        report +=f"No script file found."
+    report +="------------------------------\n"
     return report
 
 print(doExamCheck())
