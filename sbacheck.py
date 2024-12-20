@@ -660,8 +660,7 @@ def getDNSRecord(domain, record_type='A', dns_server=None):
         
         return records
     except subprocess.CalledProcessError as e:
-        print(f"Error running dig command: {e}")
-        return None
+        return f"Error running dig command: {e}"
 
 def checkDockerContainerStatus(image_name):
     # Get the JSON output from the docker ps -a command
