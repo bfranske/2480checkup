@@ -1049,7 +1049,7 @@ def doExamCheck():
         report +=scriptFile
         report +="-------------END SCRIPT-----------------\n"
     else:
-        report +=f"No script file found."
+        report +=f"No script file found.\n"
     report +="------------------------------\n"
     return report
 
