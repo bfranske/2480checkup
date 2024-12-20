@@ -1032,8 +1032,9 @@ def doExamCheck():
     dockerNginxRunning,dockerNginxHasRun,dockerNginxID, dockerNginxImage = checkDockerContainerStatus('nginx')
     report +=f"docker image {dockerNginxImage} has run: {dockerNginxHasRun}\n"
     report +=f"docker image {dockerNginxImage} is running: {dockerNginxRunning}\n"
-    dockerNginxDetails = getDockerContainerInfo(dockerNginxID)
-    report +=f"docker Nginx details: {dockerNginxDetails}\n"
+    if dockerNginxID:
+        dockerNginxDetails = getDockerContainerInfo(dockerNginxID)
+        report +=f"docker Nginx details: {dockerNginxDetails}\n"
     report +="------------------------------\n"
     report +="Part 9: Networking, Firewall, and Security\n"
     report +="------------------------------\n"
