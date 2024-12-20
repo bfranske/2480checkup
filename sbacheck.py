@@ -614,6 +614,45 @@ def verifyCachingNameserver(bindConfigFile='/etc/bind/named.conf.options', forwa
     except Exception as e:
         return f"An error occurred: {e}"
 
+def getResolvedDNSServers(interface):
+    # Run the resolvectl status command and capture the output
+    result = subprocess.run(['resolvectl', 'status', '--json'], capture_output=True, text=True)
+    
+    # Parse the JSON output
+    data = json.loads(result.stdout)
+    
+    # Find the specified interface
+    for iface in data['Interfaces']:
+        if iface['Name'] == interface:
+            # Return the list of DNS servers for the specified interface
+            return iface.get('DNS', [])
+    
+    # If the interface is not found, return an empty list
+    return []
+
+def getDNSRecord(domain, record_type='A', dns_server=None):
+    try:
+        # Prepare the dig command with the optional DNS server and record type
+        command = ['dig', '+short', '+answer', domain, record_type, '+json']
+        if dns_server:
+            command.insert(1, f'@{dns_server}')
+        
+        # Run the dig command with JSON output
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        # Parse the JSON output
+        dig_output = json.loads(result.stdout)
+        
+        # Extract the specified record type from the JSON output
+        records = [answer['data'] for answer in dig_output['Answer'] if answer['type'] == record_type]
+        
+        return records
+    except subprocess.CalledProcessError as e:
+        print(f"Error running dig command: {e}")
+        return None
+    except json.JSONDecodeError as e:
+        print(f"Error parsing JSON output: {e}")
+        return None
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -628,6 +667,8 @@ def doExamCheck():
     report +=f"ens192 is {ipDetails['ens192']['state']} with IP Address: {ipDetails['ens192']['ipv4']}/{ipDetails['ens192']['ipv4prefix']}\n"
     hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8')
     report +=f"The system host name is {hostname}\n"
+    podID = hostname.split('-')[-1]
+    report +=f"The POD ID Letter is {podID}\n"
     domainname = systemDomainName()
     report +=f"The system domain name is {domainname}\n"
     rootPasswordTest = testPassword('root','r00tp@ss')
@@ -688,6 +729,8 @@ def doExamCheck():
     networkingStatus=checkSystemdServiceStatus('networking')
     report +=f"The older service '{networkingStatus['service']}' is enabled: {networkingStatus['enabledStatus']}\n"
     report +=f"The older service '{networkingStatus['service']}' is running: {networkingStatus['runningStatus']}\n"
+    resolvedPackage = isPackageInstalled('systemd-resolved')
+    report +=f"systemd-resolved installed: {resolvedPackage}\n"
     basicURL = 'http://'+ipDetails['ens192']['ipv4']
     webserver=checkWebserver(basicURL)
     report +=f"The webserver running at {basicURL} is: {webserver}\n"
@@ -728,6 +771,60 @@ def doExamCheck():
     report +=f"BIND and dnsutils are installed: {dnsPackages}\n"
     cachingNameserver = verifyCachingNameserver('/etc/bind/named.conf.options', '172.17.50.1')
     report +=f"BIND Caching Nameserver: {cachingNameserver}\n"
+    resolvedPackage = isPackageInstalled('systemd-resolved')
+    report +=f"systemd-resolved installed: {resolvedPackage}\n"
+    systemDNSServers = getResolvedDNSServers('ens192')
+    report +=f"System DNS Servers: {systemDNSServers}\n"
+    recordType = 'A'
+    lookupDomain = 'local.sba-'+podID+'.itc2480.campus.ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    recordType = 'A'
+    lookupDomain = 'sba-'+podID+'.itc2480.campus.ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    recordType = 'A'
+    lookupDomain = 'mailserver.sba-'+podID+'.itc2480.campus.ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    recordType = 'CNAME'
+    lookupDomain = 'www.sba-'+podID+'.itc2480.campus.ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    recordType = 'MX'
+    lookupDomain = 'sba-'+podID+'.itc2480.campus.ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    recordType = 'TXT'
+    lookupDomain = 'sba-'+podID+'.itc2480.campus.ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    recordType = 'A'
+    lookupDomain = 'ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    recordType = 'CNAME'
+    lookupDomain = 'info.ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    recordType = 'MX'
+    lookupDomain = 'ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
+    recordType = 'TXT'
+    lookupDomain = 'ihitc.net'
+    dnsServer = '127.0.0.1'
+    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
+    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}"
     return report
 
 print(doExamCheck())
