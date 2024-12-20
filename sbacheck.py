@@ -615,20 +615,20 @@ def verifyCachingNameserver(bindConfigFile='/etc/bind/named.conf.options', forwa
         return f"An error occurred: {e}"
 
 def getResolvedDNSServers(interface):
-    # Run the resolvectl status command and capture the output
-    result = subprocess.run(['resolvectl', 'status', '--json=auto'], capture_output=True, text=True)
-    
-    # Parse the JSON output
-    data = json.loads(result.stdout)
-    
-    # Find the specified interface
-    for iface in data['Interfaces']:
-        if iface['Name'] == interface:
-            # Return the list of DNS servers for the specified interface
-            return iface.get('DNS', [])
-    
-    # If the interface is not found, return an empty list
-    return []
+    try:
+        # Run the resolvectl status command and capture the output
+        result = subprocess.run(['resolvectl', 'status', interface], capture_output=True, text=True, check=True)
+        
+        # Extract the line containing the current DNS server
+        for line in result.stdout.split('\n'):
+            if 'Current DNS Server' in line:
+                # Extract and return the DNS server address
+                return line.split()[-1]
+        
+        return None
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return None
 
 def getDNSRecord(domain, record_type='A', dns_server=None):
     try:
