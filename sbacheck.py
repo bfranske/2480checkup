@@ -660,15 +660,41 @@ def checkDockerContainerStatus(image_name):
     # Check the status of the given image
     running = False
     has_run = False
+    container_id = None
     
     for container in container_data:
         if container['Image'] == image_name:
             has_run = True
+            container_id = container['ID']
             if container['State'] == 'running':
                 running = True
                 break
     
-    return running, has_run
+    return running, has_run, container_id
+
+def getDockerContainerInfo(container_id):
+    # Run docker inspect command and get the output
+    result = subprocess.run(['docker', 'inspect', container_id], stdout=subprocess.PIPE)
+    container_info = json.loads(result.stdout)[0]
+
+    # Extract the required information
+    container_name = container_info['Name'].strip('/')
+    ports = container_info['NetworkSettings']['Ports']
+    auto_remove = container_info['HostConfig']['AutoRemove']
+    restart_policy = container_info['HostConfig']['RestartPolicy']['Name']
+
+    # Format the ports information
+    bridged_ports = {port: details[0]['HostPort'] for port, details in ports.items() if details}
+
+    # Determine if the container will restart automatically unless stopped
+    auto_restart = restart_policy == 'unless-stopped'
+
+    return {
+        'container_name': container_name,
+        'bridged_ports': bridged_ports,
+        'auto_remove': auto_remove,
+        'auto_restart': auto_restart
+    }
 
 def doExamCheck():
     report = ''
@@ -827,11 +853,13 @@ def doExamCheck():
     report +="------------------------------\n"
     dockerPackage = isPackageInstalled('docker-ce')
     report +=f"docker-ce installed: {dockerPackage}\n"
-    dockerHelloWorldRunning,dockerHelloWorldHasRun = checkDockerContainerStatus('hello-world')
+    dockerHelloWorldRunning,dockerHelloWorldHasRun,dockerHelloWorldID = checkDockerContainerStatus('hello-world')
     report +=f"docker hello-world has run: {dockerHelloWorldHasRun}\n"
-    dockerNginxRunning,dockerNginxHasRun = checkDockerContainerStatus('hello-world')
+    dockerNginxRunning,dockerNginxHasRun,dockerNginxID = checkDockerContainerStatus('nginx')
     report +=f"docker Nginx has run: {dockerNginxHasRun}\n"
     report +=f"docker Nginx is running: {dockerNginxRunning}\n"
+    dockerNginxDetails = getDockerContainerInfo(dockerNginxID)
+    report +=f"docker Nginx details: {dockerNginxDetails}\n"
     return report
 
 print(doExamCheck())
