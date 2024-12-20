@@ -1030,14 +1030,15 @@ def doExamCheck():
     report +="------------------------------\n"
     dockerPackage = isPackageInstalled('docker-ce')
     report +=f"docker-ce installed: {dockerPackage}\n"
-    dockerHelloWorldRunning,dockerHelloWorldHasRun,dockerHelloWorldID, docketHelloWorldImage = checkDockerContainerStatus('hello-world')
-    report +=f"docker image {docketHelloWorldImage} has run: {dockerHelloWorldHasRun}\n"
-    dockerNginxRunning,dockerNginxHasRun,dockerNginxID, dockerNginxImage = checkDockerContainerStatus('nginx')
-    report +=f"docker image {dockerNginxImage} has run: {dockerNginxHasRun}\n"
-    report +=f"docker image {dockerNginxImage} is running: {dockerNginxRunning}\n"
-    if dockerNginxID:
-        dockerNginxDetails = getDockerContainerInfo(dockerNginxID)
-        report +=f"docker Nginx details: {dockerNginxDetails}\n"
+    if dockerPackage:
+        dockerHelloWorldRunning,dockerHelloWorldHasRun,dockerHelloWorldID, docketHelloWorldImage = checkDockerContainerStatus('hello-world')
+        report +=f"docker image {docketHelloWorldImage} has run: {dockerHelloWorldHasRun}\n"
+        dockerNginxRunning,dockerNginxHasRun,dockerNginxID, dockerNginxImage = checkDockerContainerStatus('nginx')
+        report +=f"docker image {dockerNginxImage} has run: {dockerNginxHasRun}\n"
+        report +=f"docker image {dockerNginxImage} is running: {dockerNginxRunning}\n"
+        if dockerNginxID:
+            dockerNginxDetails = getDockerContainerInfo(dockerNginxID)
+            report +=f"docker Nginx details: {dockerNginxDetails}\n"
     report +="------------------------------\n"
     report +="Part 9: Networking, Firewall, and Security\n"
     report +="------------------------------\n"
