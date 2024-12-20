@@ -649,6 +649,27 @@ def getDNSRecord(domain, record_type='A', dns_server=None):
         print(f"Error running dig command: {e}")
         return None
 
+def checkDockerContainerStatus(image_name):
+    # Get the JSON output from the docker ps -a command
+    result = subprocess.run(['docker', 'ps', '-a', '--format', '{{json .}}'], capture_output=True, text=True)
+    containers = result.stdout.strip().split('\n')
+    
+    # Parse the JSON output
+    container_data = [json.loads(container) for container in containers]
+    
+    # Check the status of the given image
+    running = False
+    has_run = False
+    
+    for container in container_data:
+        if container['Image'] == image_name:
+            has_run = True
+            if container['State'] == 'running':
+                running = True
+                break
+    
+    return running, has_run
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -714,7 +735,7 @@ def doExamCheck():
     backupSoftlink = checkSoftLink('/home/linuxgeek/itcfinal-backups','/home/examuser/backups/')
     report +=f"itcfinal-backups soft link in place: {backupSoftlink}\n"
     report +="------------------------------\n"
-    report +="Part 5:\n"
+    report +="Part 5: Webserver\n"
     report +="------------------------------\n"
     ens192StaticIP = getSystemdNetworkConfig('ens192')
     report +=f"Static ens192 IPv4 Address is: {ens192StaticIP['ipv4address']}/{ens192StaticIP['ipv4mask']}\n"
@@ -742,7 +763,7 @@ def doExamCheck():
     report +=f"Wordpress Site Title: {wordpressSiteTitle}\n"
     report +=f"Wordpress Post Title: {wordpressPostTitle}\n"
     report +="------------------------------\n"
-    report +="Part 6:\n"
+    report +="Part 6: SYstem Administration\n"
     report +="------------------------------\n"
     updatedbCronjob = checkCronSchedule('updatedb')
     report +=f"Root is running updatedb on cron schedule: {updatedbCronjob}\n"
@@ -761,7 +782,7 @@ def doExamCheck():
     sdbAutoMounts = getDeviceAutomounts('/dev/sdb')
     report +=f"SDB Auto Mounts: {sdbAutoMounts}\n"
     report +="------------------------------\n"
-    report +="Part 7:\n"
+    report +="Part 7: Nameserver\n"
     report +="------------------------------\n"
     dnsPackages = isPackageInstalled('bind9') and isPackageInstalled('dnsutils')
     report +=f"BIND and dnsutils are installed: {dnsPackages}\n"
@@ -801,26 +822,16 @@ def doExamCheck():
     dnsServer = '127.0.0.1'
     dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
     report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
-    recordType = 'A'
-    lookupDomain = 'ihitc.net'
-    dnsServer = '127.0.0.1'
-    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
-    recordType = 'CNAME'
-    lookupDomain = 'info.ihitc.net'
-    dnsServer = '127.0.0.1'
-    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
-    recordType = 'MX'
-    lookupDomain = 'ihitc.net'
-    dnsServer = '127.0.0.1'
-    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
-    recordType = 'TXT'
-    lookupDomain = 'ihitc.net'
-    dnsServer = '127.0.0.1'
-    dnsRecord = getDNSRecord(lookupDomain,recordType,dnsServer)
-    report +=f"{recordType} records for {lookupDomain}: {dnsRecord}\n"
+    report +="------------------------------\n"
+    report +="Part 8: Containers\n"
+    report +="------------------------------\n"
+    dockerPackage = isPackageInstalled('docker-ce')
+    report +=f"docker-ce installed: {dockerPackage}\n"
+    dockerHelloWorldRunning,dockerHelloWorldHasRun = checkDockerContainerStatus('hello-world')
+    report +=f"docker hello-world has run: {dockerHelloWorldHasRun}\n"
+    dockerNginxRunning,dockerNginxHasRun = checkDockerContainerStatus('hello-world')
+    report +=f"docker Nginx has run: {dockerNginxHasRun}\n"
+    report +=f"docker Nginx is running: {dockerNginxRunning}\n"
     return report
 
 print(doExamCheck())
