@@ -603,18 +603,11 @@ def verifyCachingNameserver(bindConfigFile='/etc/bind/named.conf.options', forwa
             config = file.read()
        
         # Check if the forwarder IP is set correctly and not commented out
-        forwarder_pattern = r'forwarders\s*{[^}]*' + re.escape(forwarderIP) + r';'
+        forwarder_pattern = r'forwarders\s*{[^}]*\n\s*' + re.escape(forwarderIP) + r';'
         forwarder = re.search(forwarder_pattern, config)
         if not forwarder:
-            return f"Forwarder IP {forwarderIP} is not set correctly."
-        
-        # Ensure the forwarder is not commented out with //
-        lines = config.split('\n')
-        for line in lines:
-            if re.search(forwarder_pattern, line) and not line.strip().startswith('//'):
-                return "Correct forwarder."
-        
-        return f"Forwarder IP {forwarderIP} is commented out."
+            return f"Forwarder IP {forwarderIP} is not set correctly or is commented out."
+        return "Correct forwarder."
     
     except FileNotFoundError:
         return f"Configuration file {bindConfigFile} not found."
