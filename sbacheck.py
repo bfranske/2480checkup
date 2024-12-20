@@ -523,7 +523,7 @@ def getFilesystemTypes(device):
     # Iterate over each block device
     for block_device in data['blockdevices']:
         # Iterate over each partition of the device
-        for partition in block_device['children']:
+        for partition in block_device.get('children', []):
             # Convert size to GB and round to the nearest hundredth
             size_str = partition['size']
             
