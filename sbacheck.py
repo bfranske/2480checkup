@@ -675,16 +675,18 @@ def checkDockerContainerStatus(image_name):
     running = False
     has_run = False
     container_id = None
+    exact_image_name = None
     
     for container in container_data:
-        if container['Image'] == image_name:
+        if container['Image'].startswith(image_name):
             has_run = True
             container_id = container['ID']
+            exact_image_name = container['Image']
             if container['State'] == 'running':
                 running = True
                 break
     
-    return running, has_run, container_id
+    return running, has_run, container_id, exact_image_name
 
 def getDockerContainerInfo(container_id):
     # Run docker inspect command and get the output
@@ -1018,11 +1020,11 @@ def doExamCheck():
     report +="------------------------------\n"
     dockerPackage = isPackageInstalled('docker-ce')
     report +=f"docker-ce installed: {dockerPackage}\n"
-    dockerHelloWorldRunning,dockerHelloWorldHasRun,dockerHelloWorldID = checkDockerContainerStatus('hello-world')
-    report +=f"docker hello-world has run: {dockerHelloWorldHasRun}\n"
-    dockerNginxRunning,dockerNginxHasRun,dockerNginxID = checkDockerContainerStatus('nginx')
-    report +=f"docker Nginx has run: {dockerNginxHasRun}\n"
-    report +=f"docker Nginx is running: {dockerNginxRunning}\n"
+    dockerHelloWorldRunning,dockerHelloWorldHasRun,dockerHelloWorldID, docketHelloWorldImage = checkDockerContainerStatus('hello-world')
+    report +=f"docker image {docketHelloWorldImage} has run: {dockerHelloWorldHasRun}\n"
+    dockerNginxRunning,dockerNginxHasRun,dockerNginxID, dockerNginxImage = checkDockerContainerStatus('nginx')
+    report +=f"docker image {dockerNginxImage} has run: {dockerNginxHasRun}\n"
+    report +=f"docker image {dockerNginxImage} is running: {dockerNginxRunning}\n"
     dockerNginxDetails = getDockerContainerInfo(dockerNginxID)
     report +=f"docker Nginx details: {dockerNginxDetails}\n"
     report +="------------------------------\n"
