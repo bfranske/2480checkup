@@ -14,6 +14,7 @@ import stat
 import tarfile
 import requests
 import html
+import parted
 
 def getInterfaceDetails():
     ipData = {}
@@ -489,6 +490,17 @@ def verifyJournalInFile(numlines,filePath):
         return "Lines Match"
     else:
         return "No Match"
+    
+def getPartitionSizes(device):
+    disk = parted.getDevice(device)
+    partitions = disk.partitions
+    partition_sizes = {}
+
+    for partition in partitions:
+        size_gb = partition.getLength('B') / (1024 ** 3)
+        partition_sizes[partition.number] = round(size_gb, 3)
+
+    return partition_sizes
 
 def doExamCheck():
     report = ''
@@ -589,6 +601,8 @@ def doExamCheck():
     report +=f"Systemd Timer File Last Modified: {touchTimerLastMod}\n"
     journalCopy = verifyJournalInFile(100,'/home/examuser/itcfinal/biglog')
     report +=f"System Journal Copied to biglog (first 100 lines at least): {journalCopy}\n"
+    sdbPartitions = getPartitionSizes('/dev/sdb')
+    report +=f"SDB Partitions: {sdbPartitions}\n"
     return report
 
 print(doExamCheck())
