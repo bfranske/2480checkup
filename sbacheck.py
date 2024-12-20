@@ -481,8 +481,13 @@ def verifyJournalInFile(numlines,filePath):
         return f"Error: '{filePath}' does not exist."
 
     # Read the first 100 lines of the file
+    file_lines = []
     with open(filePath, 'r') as file:
-        file_lines = [next(file) for _ in range(numlines)]
+        for _ in range(numlines):
+            try:
+                file_lines.append(next(file).strip())
+            except StopIteration:
+                break
 
     # Compare the lines
     if journal_lines == file_lines:
