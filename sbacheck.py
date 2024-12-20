@@ -478,11 +478,11 @@ def verifyJournalInFile(numlines,filePath):
 
     # Get the hash of the first numlines of the systemd journal
     journal_output = subprocess.run(f'journalctl --no-pager | head -n {numlines} | sha256sum', capture_output=True, text=True, shell=True)
-    journal_lines = journal_output.stdout()
+    journal_lines = journal_output.stdout
 
     # Get the hash of the first numlines of the file
     file_output = subprocess.run(f'cat {filePath} | head -n {numlines} | sha256sum', capture_output=True, text=True, shell=True)
-    file_lines = file_output.stdout()
+    file_lines = file_output.stdout
 
     # Compare the lines
     if journal_lines == file_lines:
