@@ -492,7 +492,7 @@ def verifyJournalInFile(numlines,filePath):
     
 def getParitionSizes(device):
     # Run the lsblk command to get partition information in JSON format
-    result = subprocess.run(['lsblk', '-b', '-o', 'NAME,SIZE', '-J', device], stdout=subprocess.PIPE)
+    result = subprocess.run(['lsblk', '-o', 'NAME,SIZE', '-J', device], stdout=subprocess.PIPE)
     output = result.stdout.decode('utf-8')
 
     # Parse the JSON output
@@ -505,15 +505,13 @@ def getParitionSizes(device):
     for block_device in data['blockdevices']:
         for partition in block_device.get('children', []):
             partition_name = partition['name']
-            size_bytes = int(partition['size'])
-            size_gb = round(size_bytes / (1024 ** 3), 2)
-            partition_sizes[partition_name] = size_gb
+            partition_sizes[partition_name] = partition['size']
 
     return partition_sizes
 
 def getFilesystemTypes(device):
     # Run the lsblk command and get the output in JSON format
-    result = subprocess.run(['lsblk', '-o', 'NAME,FSTYPE,SIZE', '-J'], stdout=subprocess.PIPE)
+    result = subprocess.run(['lsblk', '-o', 'NAME,FSTYPE,SIZE', '-J', device], stdout=subprocess.PIPE)
     output = result.stdout.decode('utf-8')
     
     # Parse the JSON output
@@ -524,26 +522,16 @@ def getFilesystemTypes(device):
     
     # Iterate over each block device
     for block_device in data['blockdevices']:
-        # Check if the block device is the specified device
-        if block_device['name'] == device:
-            # Iterate over each partition of the device
-            for partition in block_device['children']:
-                # Convert size to GB and round to the nearest hundredth
-                size_str = partition['size']
-                if size_str.endswith('G'):
-                    size_gb = round(float(size_str.replace('G', '')), 2)
-                elif size_str.endswith('M'):
-                    size_gb = round(float(size_str.replace('M', '')) / 1024, 2)
-                elif size_str.endswith('K'):
-                    size_gb = round(float(size_str.replace('K', '')) / (1024 * 1024), 2)
-                else:
-                    size_gb = 0  # Handle unexpected size formats
-                
-                # Add the partition number, filesystem type, and size to the dictionary
-                fs_info[partition['name']] = {
-                    'fstype': partition['fstype'],
-                    'size_gb': size_gb
-                }
+        # Iterate over each partition of the device
+        for partition in block_device['children']:
+            # Convert size to GB and round to the nearest hundredth
+            size_str = partition['size']
+            
+            # Add the partition number, filesystem type, and size to the dictionary
+            fs_info[partition['name']] = {
+                'fstype': partition['fstype'],
+                'size_gb': size_str
+            }
     
     return fs_info
 
