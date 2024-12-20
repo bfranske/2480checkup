@@ -560,6 +560,40 @@ def getMountPoints(device):
     
     return fs_info
 
+def getDeviceAutomounts(blockdevice):
+    # Run lsblk with JSON output
+    result = subprocess.run(['lsblk', '-o', 'NAME,UUID', '--json', blockdevice], capture_output=True, text=True)
+    lsblk_output = json.loads(result.stdout)
+    
+    # Parse the lsblk output to get partition names and UUIDs
+    partitions = {}
+    for device in lsblk_output['blockdevices']:
+        if 'children' in device:
+            for child in device['children']:
+                if 'uuid' in child and child['uuid']:
+                    partitions[child['name']] = child['uuid']
+    
+    # Read the /etc/fstab file
+    with open('/etc/fstab', 'r') as fstab_file:
+        fstab_lines = fstab_file.readlines()
+    
+    # Check if UUID or partition name is set to automount and get the mount point
+    mountpoints = {}
+    for line in fstab_lines:
+        if not line.startswith('#') and line.strip():
+            parts = line.split()
+            if len(parts) >= 2:
+                device, mountpoint = parts[0], parts[1]
+                if device.startswith('UUID='):
+                    uuid = device.split('=')[1]
+                    for partition, part_uuid in partitions.items():
+                        if part_uuid == uuid:
+                            mountpoints[partition] = mountpoint
+                elif device in partitions:
+                    mountpoints[device] = mountpoint
+    
+    return mountpoints
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -665,6 +699,8 @@ def doExamCheck():
     report +=f"SDB Filesystems: {sdbFilesystems}\n"
     sdbMounts = getMountPoints('/dev/sdb')
     report +=f"SDB Mounts: {sdbMounts}\n"
+    sdbAutoMounts = getDeviceAutomounts('/dev/sdb')
+    report +=f"SDB Auto Mounts: {sdbAutoMounts}\n"
     return report
 
 print(doExamCheck())
