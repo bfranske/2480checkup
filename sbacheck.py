@@ -1047,6 +1047,7 @@ def doExamCheck():
         scriptFile = readFileAsString(scriptInfo['full_path'])
         report +="-------------BEGIN SCRIPT---------------\n"
         report +=scriptFile
+        report +="\n"
         report +="-------------END SCRIPT-----------------\n"
     else:
         report +=f"No script file found.\n"
