@@ -535,6 +535,31 @@ def getFilesystemTypes(device):
     
     return fs_info
 
+def getMountPoints(device):
+    # Run the lsblk command and get the output in JSON format
+    result = subprocess.run(['lsblk', '-o', 'NAME,MOUNTPOINT', '-J', device], stdout=subprocess.PIPE)
+    output = result.stdout.decode('utf-8')
+    
+    # Parse the JSON output
+    data = json.loads(output)
+    
+    # Initialize an empty dictionary to store the filesystem info
+    fs_info = {}
+    
+    # Iterate over each block device
+    for block_device in data['blockdevices']:
+        # Iterate over each partition of the device
+        for partition in block_device.get('children', []):
+            # Convert size to GB and round to the nearest hundredth
+            mountpoint = partition['mountpoint']
+            
+            # Add the partition number, filesystem type, and size to the dictionary
+            fs_info[partition['name']] = {
+                'mountpoint': mountpoint
+            }
+    
+    return fs_info
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -638,6 +663,8 @@ def doExamCheck():
     report +=f"SDB Partitions: {sdbPartitions}\n"
     sdbFilesystems = getFilesystemTypes('/dev/sdb')
     report +=f"SDB Filesystems: {sdbFilesystems}\n"
+    sdbMounts = getMountPoints('/dev/sdb')
+    report +=f"SDB Mounts: {sdbMounts}\n"
     return report
 
 print(doExamCheck())
