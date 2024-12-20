@@ -924,7 +924,7 @@ def doExamCheck():
     report +=f"Number of non-compliant permissions in backup directory: {checkBackupPermissions}\n"
     checkLogTar = checkFilesInTar('/home/examuser/itcfinal/systemlogs.tar.gz','/var/log',10)
     report +=f"At least 10 files from /var/log in systemlogs.tar.gz: {checkLogTar}\n"
-    backupSoftlink = checkSoftLink('/home/linuxgeek/itcfinal-backups','/home/examuser/backups/')
+    backupSoftlink = checkSoftLink('/home/linuxgeek/itcfinal-backups','/home/examuser/backups/') or checkSoftLink('/home/linuxgeek/itcfinal-backups','/home/examuser/backups')
     report +=f"itcfinal-backups soft link in place: {backupSoftlink}\n"
     report +="------------------------------\n"
     report +="Part 5: Webserver\n"
