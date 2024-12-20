@@ -715,8 +715,11 @@ def getDockerContainerInfo(container_id):
 def getKeaConfig(subnet_value):
     config_path = '/etc/kea/kea-dhcp4.conf'
     
-    with open(config_path, 'r') as file:
-        config = json.load(file)
+    try:
+        with open(config_path, 'r') as file:
+            config = json.load(file)
+    except json.decoder.JSONDecodeError as e:
+        return {'error': e}
     
     address_pool = None
     default_gateway = None
