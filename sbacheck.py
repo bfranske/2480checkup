@@ -780,7 +780,7 @@ def listFirewalldPolicies():
         # Run the firewall-cmd command to get the list of policies
         result = subprocess.run(['firewall-cmd', '--get-policies'], capture_output=True, text=True, check=True)
         # Split the result by newline to get each policy as a list item
-        policies = result.stdout.strip().split('\n')
+        policies = result.stdout.strip().split()
         return policies
     except subprocess.CalledProcessError as e:
         print(f"An error occurred: {e}")
