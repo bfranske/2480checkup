@@ -597,6 +597,23 @@ def getDeviceAutomounts(blockdevice):
     
     return mountpoints
 
+def verifyCachingNameserver(bindConfigFile='/etc/bind/named.conf.options', forwarderIP='172.17.50.1'):
+    try:
+        with open(bindConfigFile, 'r') as file:
+            config = file.read()
+       
+        # Check if the forwarder IP is set correctly
+        forwarder = re.search(r'forwarders\s*{[^}]*' + re.escape(forwarderIP) + r';', config)
+        if not forwarder:
+            return f"Forwarder IP {forwarderIP} is not set correctly."
+        
+        return "BIND9 is set up correctly as a caching nameserver with the specified forwarder."
+    
+    except FileNotFoundError:
+        return f"Configuration file {bindConfigFile} not found."
+    except Exception as e:
+        return f"An error occurred: {e}"
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -704,6 +721,13 @@ def doExamCheck():
     report +=f"SDB Mounts: {sdbMounts}\n"
     sdbAutoMounts = getDeviceAutomounts('/dev/sdb')
     report +=f"SDB Auto Mounts: {sdbAutoMounts}\n"
+    report +="------------------------------\n"
+    report +="Part 7:\n"
+    report +="------------------------------\n"
+    dnsPackages = isPackageInstalled('bind9') and isPackageInstalled('dnsutils')
+    report +=f"BIND and dnsutils are installed: {dnsPackages}\n"
+    cachingNameserver = verifyCachingNameserver('/etc/bind/named.conf.options', '172.17.50.1')
+    report +=f"BIND Caching Nameserver: {cachingNameserver}\n"
     return report
 
 print(doExamCheck())
