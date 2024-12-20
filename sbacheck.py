@@ -745,12 +745,16 @@ def getKeaConfig(subnet_value):
             break
     
     # If not found in the subnet, check global options
-    if not default_gateway or not dns_servers:
-        for option in config['Dhcp4']['option-data']:
-            if option['name'] == 'routers' and not default_gateway:
-                default_gateway = option['data']
-            elif option['name'] == 'domain-name-servers' and not dns_servers:
-                dns_servers = option['data']
+    try:
+        if not default_gateway or not dns_servers:
+            for option in config['Dhcp4']['option-data']:
+                if option['name'] == 'routers' and not default_gateway:
+                    default_gateway = option['data']
+                elif option['name'] == 'domain-name-servers' and not dns_servers:
+                    dns_servers = option['data']
+    except KeyError:
+        #no big deal, we were just giving a second chance anyway
+        pass
     
     return {
         'address_pool': address_pool,
