@@ -431,18 +431,23 @@ def verifySystemdTimer(timer_name, service_name, schedule, command, user, group)
         if timer_status != 'enabled':
             return False, f"Timer {timer_name} is not enabled."
     except subprocess.CalledProcessError:
-            return False, f"Timer {timer_name} is not enabled."
+        return False, f"Timer {timer_name} is not enabled."
 
-        # Check the timer schedule
     try:
+        # Check the timer schedule
         timer_info = subprocess.check_output(['systemctl', 'cat', timer_name]).decode()
         on_calendar_line = next((line for line in timer_info.splitlines() if 'OnCalendar=' in line), None)
+        on_unit_active_sec_line = next((line for line in timer_info.splitlines() if 'OnUnitActiveSec=' in line), None)
+        
         if on_calendar_line:
             actual_schedule = on_calendar_line.split('=')[1].strip()
             if schedule not in actual_schedule:
                 return False, f"Timer {timer_name} does not match the specified schedule. It is set to {actual_schedule}."
+        elif on_unit_active_sec_line:
+            actual_interval = on_unit_active_sec_line.split('=')[1].strip()
+            note = f"Timer {timer_name} is using OnUnitActiveSec with an interval of {actual_interval}."
         else:
-            return False, f"Timer {timer_name} does not have an OnCalendar schedule."
+            return False, f"Timer {timer_name} does not have an OnCalendar or OnUnitActiveSec schedule."
 
         # Check the service command, user, and group
         service_info = subprocess.check_output(['systemctl', 'cat', service_name]).decode()
@@ -453,7 +458,7 @@ def verifySystemdTimer(timer_name, service_name, schedule, command, user, group)
         if f"Group={group}" not in service_info:
             return False, f"Service {service_name} is not running as the specified group."
 
-        return True, "All checks passed."
+        return True, note if 'note' in locals() else "All checks passed."
 
     except subprocess.CalledProcessError as e:
         return False, str(e)
