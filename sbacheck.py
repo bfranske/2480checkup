@@ -775,6 +775,41 @@ def getFirewalldZoneRules(zone):
     
     return parsed_data
 
+def listFirewalldPolicies():
+    try:
+        # Run the firewall-cmd command to get the list of policies
+        result = subprocess.run(['firewall-cmd', '--get-policies'], capture_output=True, text=True, check=True)
+        # Split the result by newline to get each policy as a list item
+        policies = result.stdout.strip().split('\n')
+        return policies
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred: {e}")
+        return []
+    
+def getFirewalldPolicy(policy_name):
+    result = {
+        'ingress_zones': [],
+        'egress_zones': [],
+        'target': None
+    }
+    
+    try:
+        # Get the policy information using firewall-cmd
+        policy_info = subprocess.check_output(['firewall-cmd', '--info-policy', policy_name], text=True)
+        
+        for line in policy_info.split('\n'):
+            if line.startswith('ingress-zones:'):
+                result['ingress_zones'] = line.split(':')[1].strip().split()
+            elif line.startswith('egress-zones:'):
+                result['egress_zones'] = line.split(':')[1].strip().split()
+            elif line.startswith('target:'):
+                result['target'] = line.split(':')[1].strip()
+    
+    except subprocess.CalledProcessError as e:
+        print(f"Error retrieving policy information: {e}")
+    
+    return result
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -962,6 +997,12 @@ def doExamCheck():
     report +=f"firewalld public zone: {firewalldPublicZoneRules}\n"
     firewalldPrivateZoneRules = getFirewalldZoneRules('private')
     report +=f"firewalld private zone: {firewalldPrivateZoneRules}\n"
+    firewalldPolicies = listFirewalldPolicies()
+    report +=f"firewalld policies: {firewalldPolicies}\n"
+    for policy in firewalldPolicies:
+        policyDetails = getFirewalldPolicy(policy)
+        report +=f"firewalld policy {policy}: {policyDetails}\n"
+
     return report
 
 print(doExamCheck())
