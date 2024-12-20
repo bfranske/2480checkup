@@ -589,8 +589,11 @@ def getDeviceAutomounts(blockdevice):
                     for partition, part_uuid in partitions.items():
                         if part_uuid == uuid:
                             mountpoints[partition] = mountpoint
-                elif device in partitions:
-                    mountpoints[device] = mountpoint
+                else:
+                    #check for old style fstab using the /dev/sdXX instead of UUID
+                    device_name = device.replace('/dev/', '')
+                    if device_name in partitions:
+                        mountpoints[device] = mountpoint
     
     return mountpoints
 
