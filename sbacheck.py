@@ -630,6 +630,20 @@ def getResolvedDNSServers(interface):
         print(f"Error: {e}")
         return None
 
+def getResolvConfServers():
+    nameserver_ips = []
+    try:
+        with open('/etc/resolv.conf', 'r') as file:
+            for line in file:
+                if line.startswith('nameserver'):
+                    nameserver_ips.append(line.split()[1])
+    except FileNotFoundError:
+        print("The /etc/resolv.conf file does not exist.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+    
+    return nameserver_ips
+
 def getDNSRecord(domain, record_type='A', dns_server=None):
     try:
         # Prepare the dig command with the optional DNS server and record type
@@ -963,8 +977,12 @@ def doExamCheck():
     report +=f"BIND Caching Nameserver: {cachingNameserver}\n"
     resolvedPackage = isPackageInstalled('systemd-resolved')
     report +=f"systemd-resolved installed: {resolvedPackage}\n"
-    systemDNSServers = getResolvedDNSServers('ens192')
-    report +=f"System DNS Servers: {systemDNSServers}\n"
+    if resolvedPackage:
+        systemDNSServers = getResolvedDNSServers('ens192')
+        report +=f"System DNS Servers via resolved: {systemDNSServers}\n"
+    else:
+        systemDNSServers = getResolvConfServers()
+        report +=f"System DNS Servers via resolv.conf: {systemDNSServers}\n"
     recordType = 'A'
     lookupDomain = 'local.sba-'+podID+'.itc2480.campus.ihitc.net'
     dnsServer = '127.0.0.1'
