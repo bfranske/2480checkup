@@ -936,7 +936,7 @@ def doExamCheck():
     report +=f"Wordpress Site Title: {wordpressSiteTitle}\n"
     report +=f"Wordpress Post Title: {wordpressPostTitle}\n"
     report +="------------------------------\n"
-    report +="Part 6: SYstem Administration\n"
+    report +="Part 6: System Administration\n"
     report +="------------------------------\n"
     updatedbCronjob = checkCronSchedule('updatedb')
     report +=f"Root is running updatedb on cron schedule: {updatedbCronjob}\n"
