@@ -696,6 +696,42 @@ def getDockerContainerInfo(container_id):
         'auto_restart': auto_restart
     }
 
+def getKeaConfig(subnet_value):
+    config_path = '/etc/kea/kea-dhcp4.conf'
+    
+    with open(config_path, 'r') as file:
+        config = json.load(file)
+    
+    address_pool = None
+    default_gateway = None
+    dns_servers = None
+    
+    # Find the subnet configuration
+    for subnet in config['Dhcp4']['subnet4']:
+        if subnet['subnet'] == subnet_value:
+            address_pool = subnet['pools'][0]['pool']
+            if 'option-data' in subnet:
+                for option in subnet['option-data']:
+                    if option['name'] == 'routers':
+                        default_gateway = option['data']
+                    elif option['name'] == 'domain-name-servers':
+                        dns_servers = option['data']
+            break
+    
+    # If not found in the subnet, check global options
+    if not default_gateway or not dns_servers:
+        for option in config['Dhcp4']['option-data']:
+            if option['name'] == 'routers' and not default_gateway:
+                default_gateway = option['data']
+            elif option['name'] == 'domain-name-servers' and not dns_servers:
+                dns_servers = option['data']
+    
+    return {
+        'address_pool': address_pool,
+        'default_gateway': default_gateway,
+        'dns_servers': dns_servers
+    }
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -860,6 +896,19 @@ def doExamCheck():
     report +=f"docker Nginx is running: {dockerNginxRunning}\n"
     dockerNginxDetails = getDockerContainerInfo(dockerNginxID)
     report +=f"docker Nginx details: {dockerNginxDetails}\n"
+    report +="------------------------------\n"
+    report +="Part 9: Networking, Firewall, and Security\n"
+    report +="------------------------------\n"
+    ipDetails = getInterfaceDetails()
+    report +=f"ens192 is {ipDetails['ens224']['state']} with IP Address: {ipDetails['ens224']['ipv4']}/{ipDetails['ens224']['ipv4prefix']}\n"
+    keaPackage = isPackageInstalled('kea-dhcp4-server')
+    report +=f"Kea DHCP Server installed: {keaPackage}\n"
+    keaStatus=checkSystemdServiceStatus('kea-dhcp4-server')
+    report +=f"The '{keaStatus['service']}' service is enabled: {keaStatus['enabledStatus']}\n"
+    report +=f"The '{keaStatus['service']}' service is running: {keaStatus['runningStatus']}\n"
+    keaConfig = getKeaConfig('192.168.123.0/24')
+    report +=f"The kea config for 192.168.123.0/24: {keaConfig}\n"
+
     return report
 
 print(doExamCheck())
