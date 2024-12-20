@@ -732,6 +732,49 @@ def getKeaConfig(subnet_value):
         'dns_servers': dns_servers
     }
 
+def getFirewalldZones():
+    try:
+        # Run the firewall-cmd command to get the list of zones
+        result = subprocess.run(['firewall-cmd', '--get-zones'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        # Check if the command was successful
+        if result.returncode == 0:
+            # Split the output into a list of zones
+            zones = result.stdout.strip().split()
+            return zones
+        else:
+            print(f"Error: {result.stderr}")
+            return []
+    except Exception as e:
+        print(f"An exception occurred: {e}")
+        return []
+    
+def getFirewalldZoneRules(zone):
+    # Run the firewall-cmd command to get the --list-all output for the specified zone
+    result = subprocess.run(['firewall-cmd', '--zone', zone, '--list-all'], capture_output=True, text=True)
+    
+    # Check if the command was successful
+    if result.returncode != 0:
+        raise Exception(f"Error running firewall-cmd: {result.stderr}")
+    
+    # Split the output into lines
+    lines = result.stdout.splitlines()
+    
+    # Initialize an empty dictionary to store the parsed data
+    parsed_data = {}
+    
+    # Iterate over each line and parse it into the dictionary
+    for line in lines:
+        if ':' in line:  # Only process lines with a colon
+            key, value = line.split(':', 1)
+            key = key.strip()
+            value = value.strip()
+            if ' ' in value:
+                value = value.split()
+            parsed_data[key] = value
+    
+    return parsed_data
+
 def doExamCheck():
     report = ''
     report +="------------------------------\n"
@@ -900,7 +943,7 @@ def doExamCheck():
     report +="Part 9: Networking, Firewall, and Security\n"
     report +="------------------------------\n"
     ipDetails = getInterfaceDetails()
-    report +=f"ens192 is {ipDetails['ens224']['state']} with IP Address: {ipDetails['ens224']['ipv4']}/{ipDetails['ens224']['ipv4prefix']}\n"
+    report +=f"ens224 is {ipDetails['ens224']['state']} with IP Address: {ipDetails['ens224']['ipv4']}/{ipDetails['ens224']['ipv4prefix']}\n"
     keaPackage = isPackageInstalled('kea-dhcp4-server')
     report +=f"Kea DHCP Server installed: {keaPackage}\n"
     keaStatus=checkSystemdServiceStatus('kea-dhcp4-server')
@@ -908,7 +951,17 @@ def doExamCheck():
     report +=f"The '{keaStatus['service']}' service is running: {keaStatus['runningStatus']}\n"
     keaConfig = getKeaConfig('192.168.123.0/24')
     report +=f"The kea config for 192.168.123.0/24: {keaConfig}\n"
-
+    firewalldPackage = isPackageInstalled('firewalld')
+    report +=f"firewalld installed: {firewalldPackage}\n"
+    firewalldStatus=checkSystemdServiceStatus('firewalld')
+    report +=f"The '{firewalldStatus['service']}' service is enabled: {firewalldStatus['enabledStatus']}\n"
+    report +=f"The '{firewalldStatus['service']}' service is running: {firewalldStatus['runningStatus']}\n"
+    firewalldZones = getFirewalldZones()
+    report +=f"firewalld zones: {firewalldZones}\n"
+    firewalldPublicZoneRules = getFirewalldZoneRules('public')
+    report +=f"firewalld public zone: {firewalldPublicZoneRules}\n"
+    firewalldPrivateZoneRules = getFirewalldZoneRules('private')
+    report +=f"firewalld private zone: {firewalldPrivateZoneRules}\n"
     return report
 
 print(doExamCheck())
