@@ -616,7 +616,7 @@ def verifyCachingNameserver(bindConfigFile='/etc/bind/named.conf.options', forwa
 
 def getResolvedDNSServers(interface):
     # Run the resolvectl status command and capture the output
-    result = subprocess.run(['resolvectl', 'status', '--json'], capture_output=True, text=True)
+    result = subprocess.run(['resolvectl', 'status', '--json=auto'], capture_output=True, text=True)
     
     # Parse the JSON output
     data = json.loads(result.stdout)
