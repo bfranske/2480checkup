@@ -386,23 +386,26 @@ def checkPHPVersion(filePath, url):
         return str(e)
     
 def getWordpressTitles(url):
-    response = requests.get(url)
-    
-    # Check if the response status code is 200 OK
-    if response.status_code != 200:
-        return f"Error: {response.status_code}", f"Error: {response.status_code}"
-    
-    html_content = response.text
-    
-    # Extract the site title using regex
-    site_title_match = re.search(r'<title>(.*?)</title>', html_content, re.IGNORECASE)
-    site_title = html.unescape(site_title_match.group(1)) if site_title_match else 'No site title found'
-    
-    # Extract the title of the most recent blog post using regex
-    recent_post_match = re.search(r'<h2.*?wp-block-post-title.*?<a.*?>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
-    recent_post_title = html.unescape(recent_post_match.group(1).strip()) if recent_post_match else 'No recent post found'
-    
-    return site_title, recent_post_title
+    try:
+        response = requests.get(url)
+        
+        # Check if the response status code is 200 OK
+        if response.status_code != 200:
+            return f"Error: {response.status_code}", f"Error: {response.status_code}"
+        
+        html_content = response.text
+        
+        # Extract the site title using regex
+        site_title_match = re.search(r'<title>(.*?)</title>', html_content, re.IGNORECASE)
+        site_title = html.unescape(site_title_match.group(1)) if site_title_match else 'No site title found'
+        
+        # Extract the title of the most recent blog post using regex
+        recent_post_match = re.search(r'<h2.*?wp-block-post-title.*?<a.*?>(.*?)</a>', html_content, re.IGNORECASE | re.DOTALL)
+        recent_post_title = html.unescape(recent_post_match.group(1).strip()) if recent_post_match else 'No recent post found'
+        
+        return site_title, recent_post_title
+    except:
+        return f"Error: Unable to access site", f"Error: Unable to access site"
 
 def checkCronSchedule(command):
     try:
