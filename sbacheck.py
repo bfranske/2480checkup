@@ -1090,4 +1090,9 @@ def doExamCheck():
     report +="------------------------------\n"
     return report
 
-print(doExamCheck())
+#print(doExamCheck())
+file_path = "/root/sbaresult.txt"
+text_to_write = doExamCheck()
+
+with open(file_path, "w") as file:
+    file.write(text_to_write)
