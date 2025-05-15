@@ -185,6 +185,9 @@ def verifyCopiedLines(sourceFile,targetFile,numLines):
     except FileNotFoundError as e:
         print(f"Error: {e}")
         return False
+    except NotADirectoryError as e:
+        print(f"Error: {e}")
+        return False
 
 def verifyRecursiveOwnership(directory, username):
     if not os.path.exists(directory):
