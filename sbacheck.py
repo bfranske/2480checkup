@@ -840,6 +840,9 @@ def listFirewalldPolicies():
     except subprocess.CalledProcessError as e:
         print(f"An error occurred: {e}")
         return []
+    except FileNotFoundError as e:
+        print(f"An error occurred: {e}")
+        return []
     
 def getFirewalldPolicy(policy_name):
     result = {
@@ -863,6 +866,8 @@ def getFirewalldPolicy(policy_name):
     
     except subprocess.CalledProcessError as e:
         print(f"Error retrieving policy information: {e}")
+    except FileNotFoundError as e:
+        print(f"An error occurred: {e}")
     
     return result
 
