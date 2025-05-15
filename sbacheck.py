@@ -273,6 +273,9 @@ def checkFilesInTar(tar_path, dir_path, min_files=10):
     except FileNotFoundError as e:
         print(f"Error: {e}")
         return False
+    except NotADirectoryError as e:
+        print(f"Error: {e}")
+        return False
 
 def checkSoftLink(source, target):
     try:
@@ -285,6 +288,9 @@ def checkSoftLink(source, target):
                 return True
         return False
     except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return False
+    except NotADirectoryError as e:
         print(f"Error: {e}")
         return False
 
@@ -628,6 +634,8 @@ def verifyCachingNameserver(bindConfigFile='/etc/bind/named.conf.options', forwa
     
     except FileNotFoundError:
         return f"Configuration file {bindConfigFile} not found."
+    except NotADirectoryError:
+        return f"Configuration directory {bindConfigFile} not found."
     except Exception as e:
         return f"An error occurred: {e}"
 
