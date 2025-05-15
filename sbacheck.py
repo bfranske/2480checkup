@@ -747,6 +747,8 @@ def getKeaConfig(subnet_value):
             config = json.load(file)
     except json.decoder.JSONDecodeError as e:
         return {'error': e}
+    except FileNotFoundError as e:
+        return {'error': e}
     
     address_pool = None
     default_gateway = None
