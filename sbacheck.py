@@ -802,12 +802,15 @@ def getFirewalldZones():
         return []
     
 def getFirewalldZoneRules(zone):
-    # Run the firewall-cmd command to get the --list-all output for the specified zone
-    result = subprocess.run(['firewall-cmd', '--zone', zone, '--list-all'], capture_output=True, text=True)
-    
-    # Check if the command was successful
-    if result.returncode != 0:
-        return result.stderr
+    try:
+        # Run the firewall-cmd command to get the --list-all output for the specified zone
+        result = subprocess.run(['firewall-cmd', '--zone', zone, '--list-all'], capture_output=True, text=True)
+        
+        # Check if the command was successful
+        if result.returncode != 0:
+            return result.stderr
+    except FileNotFoundError as e:
+        return str(e)
     
     # Split the output into lines
     lines = result.stdout.splitlines()
