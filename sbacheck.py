@@ -379,8 +379,11 @@ def checkPHPVersion(filePath, url):
     php_code = "<?php\nphpinfo();\n?>"
     
     # Write the PHP code to the file
-    with open(filePath, 'w') as file:
-        file.write(php_code)
+    try:
+        with open(filePath, 'w') as file:
+            file.write(php_code)
+    except FileNotFoundError as e:
+        return str(e)
     
     os.chmod(filePath, 0o755)
 
