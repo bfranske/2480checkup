@@ -159,6 +159,9 @@ def checkCommonFiles(sourceDir, targetDir, numFiles):
     except FileNotFoundError as e:
         print(f"Error: {e}")
         return False
+    except NotADirectoryError as e:
+        print(f"Error: {e}")
+        return False
     
     commonFiles = sourceFiles.intersection(targetFiles)
     
