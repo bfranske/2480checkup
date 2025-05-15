@@ -147,6 +147,9 @@ def fileContainsRegex(filePath, pattern):
     except FileNotFoundError:
         print(f"File not found: {filePath}")
         return False
+    except NotADirectoryError:
+        print(f"Directory not found: {filePath}")
+        return False
 
 def checkCommonFiles(sourceDir, targetDir, numFiles):
     #check if at least numFiles from the sourceDir exist in the targetDir
