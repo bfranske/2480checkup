@@ -943,9 +943,9 @@ def doExamCheck():
     else:
         studentGroupMembers = None
     report +=f"student group members: {studentGroupMembers}\n"
-    lastTenLinesCommand = checkBASHHistory('examuser', 'tail -10 /var/log/dpkg.log > /home/linuxgeek/recent-packages') or checkBASHHistory('examuser', 'tail -n 10 /var/log/dpkg.log > /home/linuxgeek/recent-packages')
+    lastTenLinesCommand = checkBASHHistory('examuser', 'tail -10 /var/log/dpkg.log > /home/examuser/recent-packages') or checkBASHHistory('examuser', 'tail -n 10 /var/log/dpkg.log > /home/examuser/recent-packages')
     report +=f"Did examuser create a file of recent packages with 10 lines: {lastTenLinesCommand}\n"
-    recentPackagesUser,recentPackagesGroup = getFileOwnership('/home/linuxgeek/recent-packages')
+    recentPackagesUser,recentPackagesGroup = getFileOwnership('/home/examuser/recent-packages')
     report +=f"recent-packages file owner is: {recentPackagesUser}\n"
     report +=f"recent-packages file group owner is: {recentPackagesGroup}\n"
     sectionThreePackages = isPackageInstalled('python3') and isPackageInstalled('curl') and isPackageInstalled('locate') and isPackageInstalled('python3-requests')
