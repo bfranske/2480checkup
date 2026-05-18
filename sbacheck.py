@@ -1096,8 +1096,8 @@ def doExamCheck():
     report +=f"firewalld zones: {firewalldZones}\n"
     firewalldPublicZoneRules = getFirewalldZoneRules('public')
     report +=f"firewalld public zone: {firewalldPublicZoneRules}\n"
-    firewalldPrivateZoneRules = getFirewalldZoneRules('private')
-    report +=f"firewalld private zone: {firewalldPrivateZoneRules}\n"
+    firewalldHomeZoneRules = getFirewalldZoneRules('home')
+    report +=f"firewalld home zone: {firewalldHomeZoneRules}\n"
     firewalldPolicies = listFirewalldPolicies()
     report +=f"firewalld policies: {firewalldPolicies}\n"
     for policy in firewalldPolicies:
