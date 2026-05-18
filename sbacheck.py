@@ -916,7 +916,7 @@ def doExamCheck():
     report +="Part 2: Basic Installation\n"
     report +="------------------------------\n"
     ipDetails = getInterfaceDetails()
-    report +=f"ens192 is {ipDetails['ens192']['state']} with IP Address: {ipDetails['ens192']['ipv4']}/{ipDetails['ens192']['ipv4prefix']}\n"
+    report +=f"ens18 is {ipDetails['ens18']['state']} with IP Address: {ipDetails['ens18']['ipv4']}/{ipDetails['ens18']['ipv4prefix']}\n"
     hostname = subprocess.run(['hostname'], capture_output=True).stdout.decode('utf-8').strip()
     report +=f"The system host name is {hostname}\n"
     podID = hostname.split('-')[-1]
@@ -972,9 +972,9 @@ def doExamCheck():
     report +="------------------------------\n"
     report +="Part 5: Webserver\n"
     report +="------------------------------\n"
-    ens192StaticIP = getSystemdNetworkConfig('ens192')
-    report +=f"Static ens192 IPv4 Address is: {ens192StaticIP['ipv4address']}/{ens192StaticIP['ipv4mask']}\n"
-    report +=f"Active ens192 IPv4 Address is: {ipDetails['ens192']['ipv4']}/{ipDetails['ens192']['ipv4prefix']}\n"
+    ens18StaticIP = getSystemdNetworkConfig('ens18')
+    report +=f"Static ens18 IPv4 Address is: {ens18StaticIP['ipv4address']}/{ens18StaticIP['ipv4mask']}\n"
+    report +=f"Active ens18 IPv4 Address is: {ipDetails['ens18']['ipv4']}/{ipDetails['ens18']['ipv4prefix']}\n"
     networkdStatus=checkSystemdServiceStatus('systemd-networkd')
     report +=f"The newer service '{networkdStatus['service']}' is enabled: {networkdStatus['enabledStatus']}\n"
     report +=f"The newer service '{networkdStatus['service']}' is running: {networkdStatus['runningStatus']}\n"
@@ -983,7 +983,7 @@ def doExamCheck():
     report +=f"The older service '{networkingStatus['service']}' is running: {networkingStatus['runningStatus']}\n"
     resolvedPackage = isPackageInstalled('systemd-resolved')
     report +=f"systemd-resolved installed: {resolvedPackage}\n"
-    basicURL = 'http://'+ipDetails['ens192']['ipv4']
+    basicURL = 'http://'+ipDetails['ens18']['ipv4']
     webserver=checkWebserver(basicURL)
     report +=f"The webserver running at {basicURL} is: {webserver}\n"
     phpVersion=checkPHPVersion('/var/www/html/testphpver.php',basicURL+'/testphpver.php')
@@ -1026,7 +1026,7 @@ def doExamCheck():
     resolvedPackage = isPackageInstalled('systemd-resolved')
     report +=f"systemd-resolved installed: {resolvedPackage}\n"
     if resolvedPackage:
-        systemDNSServers = getResolvedDNSServers('ens192')
+        systemDNSServers = getResolvedDNSServers('ens18')
         report +=f"System DNS Servers via resolved: {systemDNSServers}\n"
     else:
         systemDNSServers = getResolvConfServers()
