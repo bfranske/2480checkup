@@ -1079,7 +1079,7 @@ def doExamCheck():
     report +="Part 9: Networking, Firewall, and Security\n"
     report +="------------------------------\n"
     ipDetails = getInterfaceDetails()
-    report +=f"ens224 is {ipDetails['ens224']['state']} with IP Address: {ipDetails['ens224']['ipv4']}/{ipDetails['ens224']['ipv4prefix']}\n"
+    report +=f"ens19 is {ipDetails['ens19']['state']} with IP Address: {ipDetails['ens19']['ipv4']}/{ipDetails['ens19']['ipv4prefix']}\n"
     keaPackage = isPackageInstalled('kea-dhcp4-server')
     report +=f"Kea DHCP Server installed: {keaPackage}\n"
     keaStatus=checkSystemdServiceStatus('kea-dhcp4-server')
